@@ -3,6 +3,9 @@ import React, { useState } from 'react';
 import { Search, Music, User, Upload, Heart, List } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import UploadModal from './UploadModal';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -10,6 +13,17 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  const handleUploadClick = () => {
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
+    setIsUploadModalOpen(true);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
@@ -17,7 +31,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       <nav className="glass border-b border-white/10 px-6 py-4">
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center space-x-8">
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 cursor-pointer" onClick={() => navigate('/')}>
               <Music className="h-8 w-8 text-purple-400" />
               <span className="text-2xl font-bold text-gradient">StreamFlow</span>
             </div>
@@ -46,12 +60,21 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               />
             </div>
             
-            <Button size="sm" className="gradient-primary hover:opacity-90 transition-opacity">
+            <Button 
+              size="sm" 
+              className="gradient-primary hover:opacity-90 transition-opacity"
+              onClick={handleUploadClick}
+            >
               <Upload className="h-4 w-4 mr-2" />
               Upload
             </Button>
             
-            <Button variant="ghost" size="sm" className="text-white hover:text-purple-400">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="text-white hover:text-purple-400"
+              onClick={() => user ? navigate('/') : navigate('/auth')}
+            >
               <User className="h-5 w-5" />
             </Button>
           </div>
@@ -101,6 +124,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           {children}
         </main>
       </div>
+
+      <UploadModal 
+        isOpen={isUploadModalOpen}
+        onClose={() => setIsUploadModalOpen(false)}
+      />
     </div>
   );
 };

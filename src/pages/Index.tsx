@@ -10,11 +10,20 @@ import { Button } from '@/components/ui/button';
 import { Play, TrendingUp, Clock, Star, Music } from 'lucide-react';
 import { useFeaturedSongs, useRecentlyPlayed } from '@/hooks/useSongs';
 import { useAuth } from '@/contexts/AuthContext';
+import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 
 const Index = () => {
   const { user } = useAuth();
   const { data: featuredTracks = [] } = useFeaturedSongs();
   const { data: recentlyPlayed = [] } = useRecentlyPlayed();
+  const { playSong, setPlaylist } = useMusicPlayer();
+
+  const handleStartListening = () => {
+    if (featuredTracks.length > 0) {
+      setPlaylist(featuredTracks);
+      playSong(featuredTracks[0]);
+    }
+  };
 
   return (
     <Layout>
@@ -35,7 +44,11 @@ const Index = () => {
                   share your tracks, and enjoy a personalized listening experience.
                 </p>
                 <div className="flex space-x-4">
-                  <Button className="gradient-primary hover:opacity-90 transition-opacity text-lg px-8 py-3">
+                  <Button 
+                    onClick={handleStartListening}
+                    className="gradient-primary hover:opacity-90 transition-opacity text-lg px-8 py-3"
+                    disabled={featuredTracks.length === 0}
+                  >
                     <Play className="h-5 w-5 mr-2" />
                     Start Listening
                   </Button>
@@ -72,7 +85,7 @@ const Index = () => {
         <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="glass p-6 rounded-xl text-center">
             <TrendingUp className="h-8 w-8 text-purple-400 mx-auto mb-3" />
-            <h3 className="text-2xl font-bold text-white">{featuredTracks.length}K</h3>
+            <h3 className="text-2xl font-bold text-white">{featuredTracks.length}</h3>
             <p className="text-gray-400">Songs Available</p>
           </div>
           <div className="glass p-6 rounded-xl text-center">
@@ -116,6 +129,8 @@ const Index = () => {
                 artist={track.artist}
                 duration={track.duration}
                 albumArt={track.cover_url}
+                song={track}
+                allSongs={featuredTracks}
               />
             ))}
           </div>
@@ -131,6 +146,10 @@ const Index = () => {
                   <div
                     key={index}
                     className="flex items-center space-x-4 p-4 hover:bg-white/5 transition-colors cursor-pointer group"
+                    onClick={() => {
+                      setPlaylist(recentlyPlayed);
+                      playSong(track);
+                    }}
                   >
                     <div className="w-12 h-12 gradient-secondary rounded-lg flex items-center justify-center">
                       <Music className="h-6 w-6 text-white" />

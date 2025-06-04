@@ -6,7 +6,9 @@ import { Card } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFavorites, useToggleFavorite } from '@/hooks/useFavorites';
 import { usePlaySong } from '@/hooks/useSongs';
+import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 import { toast } from '@/hooks/use-toast';
+import { Song } from '@/hooks/useSongs';
 
 interface MusicCardProps {
   id: string;
@@ -14,13 +16,24 @@ interface MusicCardProps {
   artist: string;
   duration?: number;
   albumArt?: string;
+  song?: Song;
+  allSongs?: Song[];
 }
 
-const MusicCard: React.FC<MusicCardProps> = ({ id, title, artist, duration, albumArt }) => {
+const MusicCard: React.FC<MusicCardProps> = ({ 
+  id, 
+  title, 
+  artist, 
+  duration, 
+  albumArt,
+  song,
+  allSongs = []
+}) => {
   const { user } = useAuth();
   const { data: favorites = [] } = useFavorites();
   const toggleFavorite = useToggleFavorite();
-  const playSong = usePlaySong();
+  const playSongMutation = usePlaySong();
+  const { playSong, setPlaylist } = useMusicPlayer();
   
   const isFavorite = favorites.includes(id);
   
@@ -32,16 +45,25 @@ const MusicCard: React.FC<MusicCardProps> = ({ id, title, artist, duration, albu
   };
 
   const handlePlay = () => {
-    if (user) {
-      playSong.mutate(id);
+    if (song) {
+      // Set the playlist for the music player
+      setPlaylist(allSongs);
+      playSong(song);
+      
+      // Track play in database if user is logged in
+      if (user) {
+        playSongMutation.mutate(id);
+      }
+      
+      toast({
+        title: "Now Playing",
+        description: `${title} by ${artist}`,
+      });
     }
-    toast({
-      title: "Now Playing",
-      description: `${title} by ${artist}`,
-    });
   };
 
-  const handleToggleFavorite = () => {
+  const handleToggleFavorite = (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (!user) {
       toast({
         title: "Please sign in",
