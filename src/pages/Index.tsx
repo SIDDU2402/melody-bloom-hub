@@ -5,18 +5,16 @@ import MusicPlayer from '@/components/MusicPlayer';
 import AudioVisualizer from '@/components/AudioVisualizer';
 import MusicCard from '@/components/MusicCard';
 import UploadZone from '@/components/UploadZone';
+import AuthButton from '@/components/AuthButton';
 import { Button } from '@/components/ui/button';
 import { Play, TrendingUp, Clock, Star, Music } from 'lucide-react';
+import { useFeaturedSongs, useRecentlyPlayed } from '@/hooks/useSongs';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Index = () => {
-  const featuredTracks = [
-    { title: "Midnight City", artist: "Synthwave Dreams", duration: "3:42" },
-    { title: "Neon Lights", artist: "Electric Pulse", duration: "4:15" },
-    { title: "Digital Love", artist: "Cyber Romance", duration: "3:28" },
-    { title: "Future Funk", artist: "Retro Wave", duration: "5:02" },
-    { title: "City Nights", artist: "Urban Sound", duration: "3:55" },
-    { title: "Cosmic Journey", artist: "Space Odyssey", duration: "4:33" },
-  ];
+  const { user } = useAuth();
+  const { data: featuredTracks = [] } = useFeaturedSongs();
+  const { data: recentlyPlayed = [] } = useRecentlyPlayed();
 
   return (
     <Layout>
@@ -41,9 +39,13 @@ const Index = () => {
                     <Play className="h-5 w-5 mr-2" />
                     Start Listening
                   </Button>
-                  <Button variant="outline" className="border-white/20 text-white hover:bg-white/10 text-lg px-8 py-3">
-                    Upload Music
-                  </Button>
+                  {user ? (
+                    <Button variant="outline" className="border-white/20 text-white hover:bg-white/10 text-lg px-8 py-3">
+                      Upload Music
+                    </Button>
+                  ) : (
+                    <AuthButton />
+                  )}
                 </div>
               </div>
               
@@ -61,12 +63,17 @@ const Index = () => {
           </div>
         </section>
 
+        {/* Auth Section */}
+        <div className="flex justify-end">
+          <AuthButton />
+        </div>
+
         {/* Quick Stats */}
         <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="glass p-6 rounded-xl text-center">
             <TrendingUp className="h-8 w-8 text-purple-400 mx-auto mb-3" />
-            <h3 className="text-2xl font-bold text-white">15.2K</h3>
-            <p className="text-gray-400">Songs Uploaded</p>
+            <h3 className="text-2xl font-bold text-white">{featuredTracks.length}K</h3>
+            <p className="text-gray-400">Songs Available</p>
           </div>
           <div className="glass p-6 rounded-xl text-center">
             <Clock className="h-8 w-8 text-pink-400 mx-auto mb-3" />
@@ -80,14 +87,16 @@ const Index = () => {
           </div>
         </section>
 
-        {/* Upload Section */}
-        <section className="space-y-6">
-          <div className="text-center">
-            <h2 className="text-3xl font-bold text-white mb-2">Share Your Music</h2>
-            <p className="text-gray-400">Upload your tracks and reach a global audience</p>
-          </div>
-          <UploadZone />
-        </section>
+        {/* Upload Section - Only show to authenticated users */}
+        {user && (
+          <section className="space-y-6">
+            <div className="text-center">
+              <h2 className="text-3xl font-bold text-white mb-2">Share Your Music</h2>
+              <p className="text-gray-400">Upload your tracks and reach a global audience</p>
+            </div>
+            <UploadZone />
+          </section>
+        )}
 
         {/* Featured Music */}
         <section className="space-y-6">
@@ -99,47 +108,53 @@ const Index = () => {
           </div>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6">
-            {featuredTracks.map((track, index) => (
+            {featuredTracks.map((track) => (
               <MusicCard
-                key={index}
+                key={track.id}
+                id={track.id}
                 title={track.title}
                 artist={track.artist}
                 duration={track.duration}
+                albumArt={track.cover_url}
               />
             ))}
           </div>
         </section>
 
-        {/* Recently Played */}
-        <section className="space-y-6">
-          <h2 className="text-3xl font-bold text-white">Recently Played</h2>
-          <div className="glass rounded-xl overflow-hidden">
-            <div className="space-y-0">
-              {featuredTracks.slice(0, 4).map((track, index) => (
-                <div
-                  key={index}
-                  className="flex items-center space-x-4 p-4 hover:bg-white/5 transition-colors cursor-pointer group"
-                >
-                  <div className="w-12 h-12 gradient-secondary rounded-lg flex items-center justify-center">
-                    <Music className="h-6 w-6 text-white" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-white font-medium">{track.title}</p>
-                    <p className="text-gray-400 text-sm">{track.artist}</p>
-                  </div>
-                  <div className="text-gray-400 text-sm">{track.duration}</div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="opacity-0 group-hover:opacity-100 transition-opacity text-purple-400 hover:text-purple-300"
+        {/* Recently Played - Only show to authenticated users */}
+        {user && recentlyPlayed.length > 0 && (
+          <section className="space-y-6">
+            <h2 className="text-3xl font-bold text-white">Recently Played</h2>
+            <div className="glass rounded-xl overflow-hidden">
+              <div className="space-y-0">
+                {recentlyPlayed.map((track, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center space-x-4 p-4 hover:bg-white/5 transition-colors cursor-pointer group"
                   >
-                    <Play className="h-4 w-4" />
-                  </Button>
-                </div>
-              ))}
+                    <div className="w-12 h-12 gradient-secondary rounded-lg flex items-center justify-center">
+                      <Music className="h-6 w-6 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-white font-medium">{track.title}</p>
+                      <p className="text-gray-400 text-sm">{track.artist}</p>
+                    </div>
+                    <div className="text-gray-400 text-sm">
+                      {track.duration ? `${Math.floor(track.duration / 60)}:${(track.duration % 60).toString().padStart(2, '0')}` : ''}
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="opacity-0 group-hover:opacity-100 transition-opacity text-purple-400 hover:text-purple-300"
+                    >
+                      <Play className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+        )}
       </div>
 
       <MusicPlayer />
