@@ -110,11 +110,13 @@ const UploadZone: React.FC = () => {
             />
             <label htmlFor="file-upload">
               <Button 
-                as="span"
+                asChild
                 className="gradient-primary hover:opacity-90 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-purple-500/25 text-lg px-8 py-3"
               >
-                <Upload className="h-5 w-5 mr-2" />
-                Choose Files
+                <span>
+                  <Upload className="h-5 w-5 mr-2" />
+                  Choose Files
+                </span>
               </Button>
             </label>
           </div>
