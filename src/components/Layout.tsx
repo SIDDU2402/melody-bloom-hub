@@ -1,9 +1,10 @@
 
 import React, { useState } from 'react';
-import { Search, Music, User, Upload, Heart, List } from 'lucide-react';
+import { Search, Music, User, Upload, Heart, List, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/AuthContext';
+import { useUserRole } from '@/hooks/useUserRole';
 import { useNavigate } from 'react-router-dom';
 import UploadModal from './UploadModal';
 
@@ -15,11 +16,16 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const { user } = useAuth();
+  const { isAdmin } = useUserRole();
   const navigate = useNavigate();
 
   const handleUploadClick = () => {
     if (!user) {
       navigate('/auth');
+      return;
+    }
+    if (!isAdmin) {
+      alert('Only administrators can upload music.');
       return;
     }
     setIsUploadModalOpen(true);
@@ -60,14 +66,27 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               />
             </div>
             
-            <Button 
-              size="sm" 
-              className="gradient-primary hover:opacity-90 transition-opacity"
-              onClick={handleUploadClick}
-            >
-              <Upload className="h-4 w-4 mr-2" />
-              Upload
-            </Button>
+            {user && isAdmin && (
+              <>
+                <Button 
+                  size="sm" 
+                  className="gradient-primary hover:opacity-90 transition-opacity"
+                  onClick={handleUploadClick}
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  Upload
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  className="border-purple-400/50 text-purple-400 hover:bg-purple-400/10 transition-colors"
+                  onClick={() => navigate('/admin')}
+                >
+                  <Shield className="h-4 w-4 mr-2" />
+                  Admin
+                </Button>
+              </>
+            )}
             
             <Button 
               variant="ghost" 
@@ -103,6 +122,22 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               </div>
             </div>
 
+            {user && isAdmin && (
+              <div>
+                <h3 className="text-lg font-semibold text-white mb-3">Admin</h3>
+                <div className="space-y-2">
+                  <Button 
+                    variant="ghost" 
+                    className="w-full justify-start text-purple-300 hover:text-white hover:bg-white/10"
+                    onClick={() => navigate('/admin')}
+                  >
+                    <Shield className="h-4 w-4 mr-3" />
+                    Dashboard
+                  </Button>
+                </div>
+              </div>
+            )}
+
             <div>
               <h3 className="text-lg font-semibold text-white mb-3">Quick Access</h3>
               <div className="space-y-2">
@@ -125,10 +160,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         </main>
       </div>
 
-      <UploadModal 
-        isOpen={isUploadModalOpen}
-        onClose={() => setIsUploadModalOpen(false)}
-      />
+      {user && isAdmin && (
+        <UploadModal 
+          isOpen={isUploadModalOpen}
+          onClose={() => setIsUploadModalOpen(false)}
+        />
+      )}
     </div>
   );
 };

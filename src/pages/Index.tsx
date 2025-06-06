@@ -4,7 +4,6 @@ import Layout from '@/components/Layout';
 import MusicPlayer from '@/components/MusicPlayer';
 import AudioVisualizer from '@/components/AudioVisualizer';
 import MusicCard from '@/components/MusicCard';
-import UploadZone from '@/components/UploadZone';
 import AuthButton from '@/components/AuthButton';
 import { Button } from '@/components/ui/button';
 import { Play, TrendingUp, Clock, Star, Music, Sparkles } from 'lucide-react';
@@ -43,8 +42,7 @@ const Index = () => {
                   <span className="text-gradient animate-glow">Your Experience</span>
                 </h1>
                 <p className="text-xl md:text-2xl text-gray-300 leading-relaxed">
-                  Stream, upload, and discover amazing music. Create playlists, 
-                  share your tracks, and enjoy a personalized listening experience.
+                  Stream, discover, and enjoy amazing music. Create playlists and enjoy a personalized listening experience.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4">
                   <Button 
@@ -55,17 +53,7 @@ const Index = () => {
                     <Play className="h-6 w-6 mr-3" />
                     Start Listening
                   </Button>
-                  {user ? (
-                    <Button 
-                      variant="outline" 
-                      className="border-white/20 text-white hover:bg-white/10 text-xl px-10 py-4 rounded-full transition-all duration-300 transform hover:scale-105"
-                    >
-                      <Music className="h-6 w-6 mr-3" />
-                      Upload Music
-                    </Button>
-                  ) : (
-                    <AuthButton />
-                  )}
+                  {!user && <AuthButton />}
                 </div>
               </div>
               
@@ -101,17 +89,6 @@ const Index = () => {
             </div>
           ))}
         </section>
-
-        {/* Upload Section - Only show to authenticated users */}
-        {user && (
-          <section className="space-y-8 animate-slide-up" style={{ animationDelay: "0.3s" }}>
-            <div className="text-center">
-              <h2 className="text-4xl font-bold text-white mb-4">Share Your Music</h2>
-              <p className="text-gray-400 text-xl">Upload your tracks and reach a global audience</p>
-            </div>
-            <UploadZone />
-          </section>
-        )}
 
         {/* Featured Music */}
         <section className="space-y-8 animate-fade-in" style={{ animationDelay: "0.4s" }}>
