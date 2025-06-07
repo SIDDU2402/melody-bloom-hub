@@ -39,8 +39,7 @@ export const useFeaturedSongs = () => {
       const { data, error } = await supabase
         .from('songs')
         .select('*')
-        .order('play_count', { ascending: false })
-        .limit(6);
+        .order('play_count', { ascending: false });
       
       if (error) throw error;
       return data as Song[];
