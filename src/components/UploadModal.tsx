@@ -11,9 +11,10 @@ import { useUpload } from '@/hooks/useUpload';
 interface UploadModalProps {
   isOpen: boolean;
   onClose: () => void;
+  preSelectedFile?: File | null;
 }
 
-const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose }) => {
+const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, preSelectedFile }) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [metadata, setMetadata] = useState({
     title: '',
@@ -23,17 +24,23 @@ const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose }) => {
   });
   const { uploadSong, uploadProgress } = useUpload();
 
-  // Auto-select file if user dropped/selected one
+  // Handle pre-selected file or try to get from main upload zone
   useEffect(() => {
-    if (isOpen && !selectedFile) {
-      // Try to get file from file input
-      const fileInput = document.getElementById('file-upload') as HTMLInputElement;
-      if (fileInput?.files && fileInput.files.length > 0) {
-        const file = fileInput.files[0];
-        handleFileSelection(file);
+    if (isOpen) {
+      if (preSelectedFile) {
+        handleFileSelection(preSelectedFile);
+      } else if (!selectedFile) {
+        // Try to get file from the main upload zone file input if it exists
+        const fileInput = document.getElementById('file-upload') as HTMLInputElement;
+        if (fileInput?.files && fileInput.files.length > 0) {
+          const file = fileInput.files[0];
+          handleFileSelection(file);
+          // Clear the file input to prevent reuse
+          fileInput.value = '';
+        }
       }
     }
-  }, [isOpen]);
+  }, [isOpen, preSelectedFile]);
 
   const handleFileSelection = (file: File) => {
     if (file && file.type.startsWith('audio/')) {

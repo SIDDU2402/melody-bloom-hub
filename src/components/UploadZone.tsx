@@ -8,6 +8,7 @@ import UploadModal from './UploadModal';
 const UploadZone: React.FC = () => {
   const [isDragOver, setIsDragOver] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -32,6 +33,7 @@ const UploadZone: React.FC = () => {
       const audioFiles = files.filter(file => file.type.startsWith('audio/'));
       if (audioFiles.length > 0) {
         console.log('Valid audio files found:', audioFiles);
+        setSelectedFile(audioFiles[0]);
         setIsModalOpen(true);
       } else {
         console.log('No audio files found in drop');
@@ -43,8 +45,14 @@ const UploadZone: React.FC = () => {
     const files = e.target.files;
     if (files && files.length > 0) {
       console.log('File selected via input:', files[0]);
+      setSelectedFile(files[0]);
       setIsModalOpen(true);
     }
+  };
+
+  const handleModalClose = () => {
+    setIsModalOpen(false);
+    setSelectedFile(null);
   };
 
   return (
@@ -125,7 +133,8 @@ const UploadZone: React.FC = () => {
 
       <UploadModal 
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={handleModalClose}
+        preSelectedFile={selectedFile}
       />
     </>
   );
