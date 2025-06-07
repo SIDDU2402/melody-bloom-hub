@@ -4,7 +4,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Music, Search, Edit, Trash2, Plus, Play } from 'lucide-react';
+import { Music, Search, Edit, Trash2, Plus, Play, AlertCircle } from 'lucide-react';
 import { useFeaturedSongs } from '@/hooks/useSongs';
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
@@ -15,7 +15,7 @@ import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 const AdminSongManager = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
-  const { data: songs = [], isLoading } = useFeaturedSongs();
+  const { data: songs = [], isLoading, error } = useFeaturedSongs();
   const queryClient = useQueryClient();
   const { playSong, setPlaylist } = useMusicPlayer();
 
@@ -55,8 +55,27 @@ const AdminSongManager = () => {
   };
 
   const handlePlaySong = (song: any) => {
-    setPlaylist(songs);
-    playSong(song);
+    try {
+      setPlaylist(songs);
+      playSong(song);
+    } catch (error) {
+      console.error('Error playing song:', error);
+      toast({
+        title: "Playback Error",
+        description: "Could not play this song. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleUploadModalOpen = () => {
+    console.log('Opening upload modal');
+    setIsUploadModalOpen(true);
+  };
+
+  const handleUploadModalClose = () => {
+    console.log('Closing upload modal');
+    setIsUploadModalOpen(false);
   };
 
   if (isLoading) {
@@ -64,6 +83,18 @@ const AdminSongManager = () => {
       <Card className="glass p-6">
         <div className="flex items-center justify-center py-8">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-400"></div>
+          <span className="ml-2 text-white">Loading songs...</span>
+        </div>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card className="glass p-6">
+        <div className="flex items-center justify-center py-8">
+          <AlertCircle className="h-8 w-8 text-red-400 mr-2" />
+          <span className="text-white">Error loading songs: {error.message}</span>
         </div>
       </Card>
     );
@@ -75,10 +106,10 @@ const AdminSongManager = () => {
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-bold text-white flex items-center">
             <Music className="h-6 w-6 mr-2 text-purple-400" />
-            Song Management
+            Song Management ({songs.length} songs)
           </h2>
           <Button 
-            onClick={() => setIsUploadModalOpen(true)}
+            onClick={handleUploadModalOpen}
             className="gradient-primary hover:opacity-90"
           >
             <Plus className="h-4 w-4 mr-2" />
@@ -105,6 +136,15 @@ const AdminSongManager = () => {
               <p className="text-gray-400 text-lg">
                 {searchQuery ? 'No songs found matching your search.' : 'No songs uploaded yet.'}
               </p>
+              {!searchQuery && (
+                <Button 
+                  onClick={handleUploadModalOpen}
+                  className="mt-4 gradient-primary"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Upload First Song
+                </Button>
+              )}
             </div>
           ) : (
             filteredSongs.map((song) => (
@@ -131,7 +171,10 @@ const AdminSongManager = () => {
                         </Badge>
                       )}
                       <span className="text-xs text-gray-500">
-                        {song.duration ? `${Math.floor(song.duration / 60)}:${(song.duration % 60).toString().padStart(2, '0')}` : ''}
+                        {song.duration ? `${Math.floor(song.duration / 60)}:${(song.duration % 60).toString().padStart(2, '0')}` : 'Unknown duration'}
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        {song.play_count} plays
                       </span>
                     </div>
                   </div>
@@ -169,7 +212,7 @@ const AdminSongManager = () => {
 
       <UploadModal 
         isOpen={isUploadModalOpen}
-        onClose={() => setIsUploadModalOpen(false)}
+        onClose={handleUploadModalClose}
       />
     </>
   );

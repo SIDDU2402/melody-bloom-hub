@@ -49,6 +49,17 @@ export const useUpload = () => {
       
       console.log('Uploading to path:', audioFileName);
       
+      // Create the bucket if it doesn't exist (this will fail gracefully if it already exists)
+      const { error: bucketError } = await supabase.storage.createBucket('music-files', {
+        public: true,
+        allowedMimeTypes: ['audio/*'],
+        fileSizeLimit: 104857600 // 100MB
+      });
+      
+      if (bucketError && !bucketError.message.includes('already exists')) {
+        console.error('Bucket creation error:', bucketError);
+      }
+      
       const { data: audioData, error: audioError } = await supabase.storage
         .from('music-files')
         .upload(audioFileName, file, {
@@ -58,7 +69,7 @@ export const useUpload = () => {
 
       if (audioError) {
         console.error('Upload error:', audioError);
-        throw audioError;
+        throw new Error(`Upload failed: ${audioError.message}`);
       }
 
       console.log('File uploaded successfully:', audioData);
@@ -72,24 +83,32 @@ export const useUpload = () => {
       console.log('Public URL generated:', audioUrl);
 
       // Get audio duration using Audio API
-      const audio = new Audio();
-      const duration = await new Promise<number>((resolve, reject) => {
-        const timeout = setTimeout(() => {
-          reject(new Error('Timeout loading audio metadata'));
-        }, 10000);
+      let duration = 0;
+      try {
+        const audio = new Audio();
+        duration = await new Promise<number>((resolve, reject) => {
+          const timeout = setTimeout(() => {
+            console.warn('Timeout loading audio metadata, using default duration');
+            resolve(0);
+          }, 10000);
 
-        audio.addEventListener('loadedmetadata', () => {
-          clearTimeout(timeout);
-          resolve(Math.floor(audio.duration));
+          audio.addEventListener('loadedmetadata', () => {
+            clearTimeout(timeout);
+            resolve(Math.floor(audio.duration));
+          });
+          
+          audio.addEventListener('error', (e) => {
+            clearTimeout(timeout);
+            console.warn('Error loading audio metadata:', e);
+            resolve(0);
+          });
+          
+          audio.src = URL.createObjectURL(file);
         });
-        
-        audio.addEventListener('error', () => {
-          clearTimeout(timeout);
-          resolve(0); // Default duration if can't load
-        });
-        
-        audio.src = URL.createObjectURL(file);
-      });
+      } catch (error) {
+        console.warn('Could not determine audio duration:', error);
+        duration = 0;
+      }
 
       console.log('Audio duration calculated:', duration);
       setUploadProgress({ progress: 75, isUploading: true });
@@ -111,7 +130,7 @@ export const useUpload = () => {
 
       if (songError) {
         console.error('Database insert error:', songError);
-        throw songError;
+        throw new Error(`Database error: ${songError.message}`);
       }
 
       console.log('Song saved to database:', songData);
@@ -131,20 +150,13 @@ export const useUpload = () => {
       console.error('Upload error:', error);
       setUploadProgress({ progress: 0, isUploading: false });
       
-      // Clean up file if it was uploaded but database insert failed
-      if (error instanceof Error && error.message.includes('duplicate')) {
-        toast({
-          title: "Song already exists",
-          description: "This song has already been uploaded.",
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Upload failed",
-          description: error instanceof Error ? error.message : "There was an error uploading your song. Please try again.",
-          variant: "destructive",
-        });
-      }
+      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+      
+      toast({
+        title: "Upload failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
       throw error;
     }
   };

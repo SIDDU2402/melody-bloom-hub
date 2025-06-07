@@ -24,21 +24,18 @@ const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, preSelectedF
   });
   const { uploadSong, uploadProgress } = useUpload();
 
-  // Handle pre-selected file or try to get from main upload zone
+  // Reset form when modal opens/closes
   useEffect(() => {
-    if (isOpen) {
-      if (preSelectedFile) {
-        handleFileSelection(preSelectedFile);
-      } else if (!selectedFile) {
-        // Try to get file from the main upload zone file input if it exists
-        const fileInput = document.getElementById('file-upload') as HTMLInputElement;
-        if (fileInput?.files && fileInput.files.length > 0) {
-          const file = fileInput.files[0];
-          handleFileSelection(file);
-          // Clear the file input to prevent reuse
-          fileInput.value = '';
-        }
-      }
+    if (!isOpen) {
+      setSelectedFile(null);
+      setMetadata({ title: '', artist: '', album: '', genre: '' });
+    }
+  }, [isOpen]);
+
+  // Handle pre-selected file
+  useEffect(() => {
+    if (isOpen && preSelectedFile) {
+      handleFileSelection(preSelectedFile);
     }
   }, [isOpen, preSelectedFile]);
 
@@ -51,6 +48,8 @@ const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, preSelectedF
         ...prev, 
         title: fileName.charAt(0).toUpperCase() + fileName.slice(1)
       }));
+    } else {
+      console.error('Invalid file type:', file.type);
     }
   };
 
@@ -63,34 +62,33 @@ const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, preSelectedF
 
   const handleUpload = async () => {
     if (!selectedFile || !metadata.title || !metadata.artist) {
+      console.error('Missing required fields:', { selectedFile: !!selectedFile, title: metadata.title, artist: metadata.artist });
       return;
     }
 
     try {
+      console.log('Starting upload with metadata:', metadata);
       await uploadSong(selectedFile, metadata);
       // Reset form and close modal on success
       setTimeout(() => {
         handleClose();
-      }, 1000);
+      }, 1500);
     } catch (error) {
       console.error('Upload failed:', error);
-      // Error is handled in the hook
     }
   };
 
   const handleClose = () => {
     if (!uploadProgress.isUploading) {
-      setSelectedFile(null);
-      setMetadata({ title: '', artist: '', album: '', genre: '' });
       onClose();
     }
   };
 
-  const isFormValid = selectedFile && metadata.title && metadata.artist;
+  const isFormValid = selectedFile && metadata.title.trim() && metadata.artist.trim();
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="glass border border-white/20 max-w-2xl animate-scale-in">
+      <DialogContent className="glass border border-white/20 max-w-2xl">
         <DialogHeader>
           <DialogTitle className="text-white text-2xl font-bold flex items-center">
             <Music className="h-6 w-6 mr-2 text-purple-400" />
@@ -120,7 +118,7 @@ const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, preSelectedF
               </Label>
             </div>
           ) : (
-            <div className="space-y-6 animate-fade-in">
+            <div className="space-y-6">
               {/* File Info */}
               <div className="flex items-center space-x-4 p-4 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-xl border border-white/10">
                 <div className="w-12 h-12 rounded-xl gradient-primary flex items-center justify-center">
@@ -146,7 +144,7 @@ const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, preSelectedF
 
               {/* Upload Progress */}
               {uploadProgress.isUploading && (
-                <div className="space-y-3 animate-fade-in">
+                <div className="space-y-3">
                   <div className="flex justify-between items-center text-sm">
                     <span className="text-gray-300 flex items-center">
                       {uploadProgress.progress === 100 ? (
