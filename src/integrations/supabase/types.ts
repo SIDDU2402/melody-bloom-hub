@@ -9,23 +9,112 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      albums: {
+        Row: {
+          artist_id: string | null
+          cover_url: string | null
+          created_at: string | null
+          genre: string | null
+          id: string
+          release_date: string | null
+          title: string
+        }
+        Insert: {
+          artist_id?: string | null
+          cover_url?: string | null
+          created_at?: string | null
+          genre?: string | null
+          id?: string
+          release_date?: string | null
+          title: string
+        }
+        Update: {
+          artist_id?: string | null
+          cover_url?: string | null
+          created_at?: string | null
+          genre?: string | null
+          id?: string
+          release_date?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "albums_artist_id_fkey"
+            columns: ["artist_id"]
+            isOneToOne: false
+            referencedRelation: "artists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      artists: {
+        Row: {
+          bio: string | null
+          created_at: string | null
+          id: string
+          image_url: string | null
+          monthly_listeners: number | null
+          name: string
+          verified: boolean | null
+        }
+        Insert: {
+          bio?: string | null
+          created_at?: string | null
+          id?: string
+          image_url?: string | null
+          monthly_listeners?: number | null
+          name: string
+          verified?: boolean | null
+        }
+        Update: {
+          bio?: string | null
+          created_at?: string | null
+          id?: string
+          image_url?: string | null
+          monthly_listeners?: number | null
+          name?: string
+          verified?: boolean | null
+        }
+        Relationships: []
+      }
+      follows: {
+        Row: {
+          created_at: string | null
+          follower_id: string
+          following_id: string
+          id: string
+        }
+        Insert: {
+          created_at?: string | null
+          follower_id: string
+          following_id: string
+          id?: string
+        }
+        Update: {
+          created_at?: string | null
+          follower_id?: string
+          following_id?: string
+          id?: string
+        }
+        Relationships: []
+      }
       playlist_songs: {
         Row: {
-          added_at: string
+          added_at: string | null
           id: string
           playlist_id: string
           position: number
           song_id: string
         }
         Insert: {
-          added_at?: string
+          added_at?: string | null
           id?: string
           playlist_id: string
           position: number
           song_id: string
         }
         Update: {
-          added_at?: string
+          added_at?: string | null
           id?: string
           playlist_id?: string
           position?: number
@@ -51,32 +140,32 @@ export type Database = {
       playlists: {
         Row: {
           cover_url: string | null
-          created_at: string
+          created_at: string | null
           description: string | null
           id: string
           is_public: boolean | null
           name: string
-          updated_at: string
+          updated_at: string | null
           user_id: string
         }
         Insert: {
           cover_url?: string | null
-          created_at?: string
+          created_at?: string | null
           description?: string | null
           id?: string
           is_public?: boolean | null
           name: string
-          updated_at?: string
+          updated_at?: string | null
           user_id: string
         }
         Update: {
           cover_url?: string | null
-          created_at?: string
+          created_at?: string | null
           description?: string | null
           id?: string
           is_public?: boolean | null
           name?: string
-          updated_at?: string
+          updated_at?: string | null
           user_id?: string
         }
         Relationships: []
