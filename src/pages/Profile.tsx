@@ -206,7 +206,16 @@ const Profile = () => {
               {recentlyPlayed && recentlyPlayed.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                   {recentlyPlayed.map((song) => (
-                    <MusicCard key={song.id} song={song} />
+                    <MusicCard 
+                      key={song.id} 
+                      id={song.id}
+                      title={song.title}
+                      artist={song.artist}
+                      duration={song.duration}
+                      albumArt={song.cover_url}
+                      song={song}
+                      allSongs={recentlyPlayed}
+                    />
                   ))}
                 </div>
               ) : (
