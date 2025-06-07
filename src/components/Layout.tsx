@@ -47,7 +47,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           <div className="flex items-center space-x-8">
             <div className="flex items-center space-x-2 cursor-pointer" onClick={() => navigate('/')}>
               <Music className="h-8 w-8 text-purple-400" />
-              <span className="text-2xl font-bold text-gradient">StreamFlow</span>
+              <span className="text-2xl font-bold text-gradient">BeatSync</span>
             </div>
             
             <div className="hidden md:flex space-x-6">
