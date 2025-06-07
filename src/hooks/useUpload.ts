@@ -34,67 +34,84 @@ export const useUpload = () => {
     }
 
     console.log('Starting upload process for:', file.name);
+    console.log('File type:', file.type);
+    console.log('File size:', file.size);
     setUploadProgress({ progress: 0, isUploading: true });
 
     try {
       // Validate file type
-      if (!file.type.startsWith('audio/')) {
-        throw new Error('Please select a valid audio file');
+      const validAudioTypes = [
+        'audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/m4a', 
+        'audio/aac', 'audio/ogg', 'audio/flac', 'audio/x-wav'
+      ];
+      
+      if (!validAudioTypes.includes(file.type) && !file.name.match(/\.(mp3|wav|m4a|aac|ogg|flac)$/i)) {
+        throw new Error('Please select a valid audio file (MP3, WAV, M4A, AAC, OGG, FLAC)');
       }
 
-      // Upload audio file with better file naming
-      const fileExtension = file.name.split('.').pop();
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}`;
-      const audioFileName = `${user.id}/${fileName}.${fileExtension}`;
-      
-      console.log('Uploading to path:', audioFileName);
-      
-      // Create the bucket if it doesn't exist (this will fail gracefully if it already exists)
-      const { error: bucketError } = await supabase.storage.createBucket('music-files', {
-        public: true,
-        allowedMimeTypes: ['audio/*'],
-        fileSizeLimit: 104857600 // 100MB
-      });
-      
-      if (bucketError && !bucketError.message.includes('already exists')) {
-        console.error('Bucket creation error:', bucketError);
+      // Validate file size (100MB limit)
+      if (file.size > 104857600) {
+        throw new Error('File size must be less than 100MB');
       }
+
+      setUploadProgress({ progress: 10, isUploading: true });
+
+      // Generate unique filename
+      const fileExtension = file.name.split('.').pop()?.toLowerCase() || 'mp3';
+      const timestamp = Date.now();
+      const randomId = Math.random().toString(36).substring(2);
+      const fileName = `${user.id}/${timestamp}-${randomId}.${fileExtension}`;
       
+      console.log('Uploading to path:', fileName);
+      
+      setUploadProgress({ progress: 20, isUploading: true });
+
+      // Upload audio file to storage
       const { data: audioData, error: audioError } = await supabase.storage
         .from('music-files')
-        .upload(audioFileName, file, {
+        .upload(fileName, file, {
           cacheControl: '3600',
-          upsert: false
+          upsert: false,
+          contentType: file.type || 'audio/mpeg'
         });
 
       if (audioError) {
-        console.error('Upload error:', audioError);
+        console.error('Storage upload error:', audioError);
+        
+        // If bucket doesn't exist, the error message will indicate that
+        if (audioError.message.includes('Bucket not found')) {
+          throw new Error('Storage bucket not configured. Please contact administrator.');
+        }
+        
         throw new Error(`Upload failed: ${audioError.message}`);
       }
 
       console.log('File uploaded successfully:', audioData);
-      setUploadProgress({ progress: 50, isUploading: true });
+      setUploadProgress({ progress: 60, isUploading: true });
 
       // Get public URL for the audio file
       const { data: { publicUrl: audioUrl } } = supabase.storage
         .from('music-files')
-        .getPublicUrl(audioFileName);
+        .getPublicUrl(fileName);
 
       console.log('Public URL generated:', audioUrl);
+      setUploadProgress({ progress: 70, isUploading: true });
 
-      // Get audio duration using Audio API
+      // Get audio duration
       let duration = 0;
       try {
         const audio = new Audio();
-        duration = await new Promise<number>((resolve, reject) => {
+        duration = await new Promise<number>((resolve) => {
           const timeout = setTimeout(() => {
             console.warn('Timeout loading audio metadata, using default duration');
             resolve(0);
-          }, 10000);
+          }, 8000);
 
           audio.addEventListener('loadedmetadata', () => {
             clearTimeout(timeout);
-            resolve(Math.floor(audio.duration));
+            const audioDuration = Math.floor(audio.duration);
+            console.log('Audio duration detected:', audioDuration);
+            resolve(audioDuration || 0);
           });
           
           audio.addEventListener('error', (e) => {
@@ -103,37 +120,54 @@ export const useUpload = () => {
             resolve(0);
           });
           
-          audio.src = URL.createObjectURL(file);
+          // Create object URL for local file
+          const objectUrl = URL.createObjectURL(file);
+          audio.src = objectUrl;
+          
+          // Clean up object URL after loading
+          audio.addEventListener('loadedmetadata', () => {
+            URL.revokeObjectURL(objectUrl);
+          });
         });
       } catch (error) {
         console.warn('Could not determine audio duration:', error);
         duration = 0;
       }
 
-      console.log('Audio duration calculated:', duration);
-      setUploadProgress({ progress: 75, isUploading: true });
+      setUploadProgress({ progress: 85, isUploading: true });
 
       // Insert song record into database
-      const { data: songData, error: songError } = await supabase
+      const songData = {
+        user_id: user.id,
+        title: metadata.title.trim(),
+        artist: metadata.artist.trim(),
+        album: metadata.album?.trim() || null,
+        genre: metadata.genre?.trim() || null,
+        duration: duration,
+        file_url: audioUrl,
+        play_count: 0
+      };
+
+      console.log('Inserting song data:', songData);
+
+      const { data: insertedSong, error: songError } = await supabase
         .from('songs')
-        .insert({
-          user_id: user.id,
-          title: metadata.title,
-          artist: metadata.artist,
-          album: metadata.album || null,
-          genre: metadata.genre || null,
-          duration: duration,
-          file_url: audioUrl,
-        })
+        .insert(songData)
         .select()
         .single();
 
       if (songError) {
         console.error('Database insert error:', songError);
-        throw new Error(`Database error: ${songError.message}`);
+        
+        // Clean up uploaded file if database insert fails
+        await supabase.storage
+          .from('music-files')
+          .remove([fileName]);
+          
+        throw new Error(`Failed to save song: ${songError.message}`);
       }
 
-      console.log('Song saved to database:', songData);
+      console.log('Song saved to database:', insertedSong);
       setUploadProgress({ progress: 100, isUploading: false });
 
       // Invalidate queries to refresh the UI
@@ -145,12 +179,12 @@ export const useUpload = () => {
         description: `${metadata.title} by ${metadata.artist} has been uploaded successfully.`,
       });
 
-      return songData;
+      return insertedSong;
     } catch (error) {
       console.error('Upload error:', error);
       setUploadProgress({ progress: 0, isUploading: false });
       
-      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+      const errorMessage = error instanceof Error ? error.message : "Upload failed. Please try again.";
       
       toast({
         title: "Upload failed",

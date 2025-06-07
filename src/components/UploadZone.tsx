@@ -10,6 +10,16 @@ const UploadZone: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
+  const validateFile = (file: File): boolean => {
+    const validTypes = [
+      'audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/m4a', 
+      'audio/aac', 'audio/ogg', 'audio/flac', 'audio/x-wav'
+    ];
+    
+    return validTypes.includes(file.type) || 
+           file.name.match(/\.(mp3|wav|m4a|aac|ogg|flac)$/i) !== null;
+  };
+
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(true);
@@ -17,7 +27,6 @@ const UploadZone: React.FC = () => {
 
   const handleDragLeave = (e: React.DragEvent) => {
     e.preventDefault();
-    // Only set to false if leaving the actual drop zone
     if (!e.currentTarget.contains(e.relatedTarget as Node)) {
       setIsDragOver(false);
     }
@@ -26,17 +35,19 @@ const UploadZone: React.FC = () => {
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(false);
+    
     const files = Array.from(e.dataTransfer.files);
     console.log('Files dropped:', files);
     
     if (files.length > 0) {
-      const audioFiles = files.filter(file => file.type.startsWith('audio/'));
+      const audioFiles = files.filter(file => validateFile(file));
       if (audioFiles.length > 0) {
         console.log('Valid audio files found:', audioFiles);
         setSelectedFile(audioFiles[0]);
         setIsModalOpen(true);
       } else {
-        console.log('No audio files found in drop');
+        console.log('No valid audio files found in drop');
+        alert('Please drop a valid audio file (MP3, WAV, M4A, AAC, OGG, FLAC)');
       }
     }
   };
@@ -44,10 +55,18 @@ const UploadZone: React.FC = () => {
   const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files && files.length > 0) {
-      console.log('File selected via input:', files[0]);
-      setSelectedFile(files[0]);
-      setIsModalOpen(true);
+      const file = files[0];
+      console.log('File selected via input:', file);
+      
+      if (validateFile(file)) {
+        setSelectedFile(file);
+        setIsModalOpen(true);
+      } else {
+        alert('Please select a valid audio file (MP3, WAV, M4A, AAC, OGG, FLAC)');
+      }
     }
+    // Reset the input
+    e.target.value = '';
   };
 
   const handleModalClose = () => {
@@ -89,7 +108,7 @@ const UploadZone: React.FC = () => {
                 : 'Drag & drop your audio files here, or click to browse'
               }
             </p>
-            <p className="text-sm text-gray-400">Supports MP3, FLAC, WAV, M4A files</p>
+            <p className="text-sm text-gray-400">Supports MP3, WAV, M4A, AAC, OGG, FLAC files (max 100MB)</p>
           </div>
           
           <div className="flex items-center justify-center space-x-6">
@@ -110,11 +129,10 @@ const UploadZone: React.FC = () => {
           <div className="space-y-4">
             <input
               type="file"
-              accept="audio/*"
+              accept="audio/*,.mp3,.wav,.m4a,.aac,.ogg,.flac"
               onChange={handleFileInputChange}
               className="hidden"
               id="file-upload"
-              multiple
             />
             <label htmlFor="file-upload">
               <Button 

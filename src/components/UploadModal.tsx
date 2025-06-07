@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
-import { Upload, X, Music, CheckCircle } from 'lucide-react';
+import { Upload, X, Music, CheckCircle, AlertCircle } from 'lucide-react';
 import { useUpload } from '@/hooks/useUpload';
 
 interface UploadModalProps {
@@ -22,6 +22,7 @@ const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, preSelectedF
     album: '',
     genre: '',
   });
+  const [dragOver, setDragOver] = useState(false);
   const { uploadSong, uploadProgress } = useUpload();
 
   // Reset form when modal opens/closes
@@ -29,6 +30,7 @@ const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, preSelectedF
     if (!isOpen) {
       setSelectedFile(null);
       setMetadata({ title: '', artist: '', album: '', genre: '' });
+      setDragOver(false);
     }
   }, [isOpen]);
 
@@ -39,18 +41,46 @@ const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, preSelectedF
     }
   }, [isOpen, preSelectedFile]);
 
-  const handleFileSelection = (file: File) => {
-    if (file && file.type.startsWith('audio/')) {
-      setSelectedFile(file);
-      // Auto-fill title from filename
-      const fileName = file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, ' ');
-      setMetadata(prev => ({ 
-        ...prev, 
-        title: fileName.charAt(0).toUpperCase() + fileName.slice(1)
-      }));
-    } else {
-      console.error('Invalid file type:', file.type);
+  const validateFile = (file: File): boolean => {
+    const validTypes = [
+      'audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/m4a', 
+      'audio/aac', 'audio/ogg', 'audio/flac', 'audio/x-wav'
+    ];
+    
+    const hasValidType = validTypes.includes(file.type) || 
+                        file.name.match(/\.(mp3|wav|m4a|aac|ogg|flac)$/i);
+    
+    if (!hasValidType) {
+      console.error('Invalid file type:', file.type, 'File name:', file.name);
+      return false;
     }
+    
+    if (file.size > 104857600) { // 100MB
+      console.error('File too large:', file.size);
+      return false;
+    }
+    
+    return true;
+  };
+
+  const handleFileSelection = (file: File) => {
+    console.log('File selected:', file.name, 'Type:', file.type, 'Size:', file.size);
+    
+    if (!validateFile(file)) {
+      alert('Please select a valid audio file (MP3, WAV, M4A, AAC, OGG, FLAC) under 100MB');
+      return;
+    }
+    
+    setSelectedFile(file);
+    
+    // Auto-fill title from filename
+    const fileName = file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, ' ');
+    const cleanTitle = fileName.charAt(0).toUpperCase() + fileName.slice(1);
+    
+    setMetadata(prev => ({ 
+      ...prev, 
+      title: cleanTitle
+    }));
   };
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -58,23 +88,43 @@ const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, preSelectedF
     if (file) {
       handleFileSelection(file);
     }
+    // Reset the input value so the same file can be selected again
+    event.target.value = '';
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length > 0) {
+      handleFileSelection(files[0]);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
   };
 
   const handleUpload = async () => {
-    if (!selectedFile || !metadata.title || !metadata.artist) {
-      console.error('Missing required fields:', { selectedFile: !!selectedFile, title: metadata.title, artist: metadata.artist });
+    if (!selectedFile || !metadata.title.trim() || !metadata.artist.trim()) {
+      alert('Please fill in all required fields (Title and Artist)');
       return;
     }
 
     try {
       console.log('Starting upload with metadata:', metadata);
       await uploadSong(selectedFile, metadata);
-      // Reset form and close modal on success
-      setTimeout(() => {
-        handleClose();
-      }, 1500);
+      // The modal will close automatically after successful upload
     } catch (error) {
       console.error('Upload failed:', error);
+      // Error is already handled in the useUpload hook
     }
   };
 
@@ -98,20 +148,32 @@ const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, preSelectedF
         
         <div className="space-y-6">
           {!selectedFile ? (
-            <div className="border-2 border-dashed border-white/20 rounded-xl p-12 text-center transition-all duration-300 hover:border-purple-400/50 hover:bg-white/5">
-              <div className="animate-float">
-                <Upload className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-              </div>
-              <p className="text-gray-300 mb-6 text-lg">Choose an audio file to upload</p>
+            <div 
+              className={`border-2 border-dashed rounded-xl p-12 text-center transition-all duration-300 ${
+                dragOver 
+                  ? 'border-purple-400 bg-purple-400/20' 
+                  : 'border-white/20 hover:border-purple-400/50 hover:bg-white/5'
+              }`}
+              onDrop={handleDrop}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+            >
+              <Upload className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-300 mb-6 text-lg">
+                {dragOver ? 'Drop your audio file here' : 'Choose an audio file to upload'}
+              </p>
+              <p className="text-sm text-gray-400 mb-4">
+                Supports MP3, WAV, M4A, AAC, OGG, FLAC files (max 100MB)
+              </p>
               <Input
                 type="file"
-                accept="audio/*"
+                accept="audio/*,.mp3,.wav,.m4a,.aac,.ogg,.flac"
                 onChange={handleFileSelect}
                 className="hidden"
                 id="modal-file-upload"
               />
               <Label htmlFor="modal-file-upload" className="cursor-pointer">
-                <Button className="gradient-primary hover:opacity-90 transition-all duration-300 transform hover:scale-105 text-lg px-8 py-3">
+                <Button className="gradient-primary hover:opacity-90 transition-all duration-300 text-lg px-8 py-3">
                   <Upload className="h-5 w-5 mr-2" />
                   Select Audio File
                 </Button>
@@ -127,7 +189,7 @@ const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, preSelectedF
                 <div className="flex-1">
                   <p className="text-white font-semibold text-lg">{selectedFile.name}</p>
                   <p className="text-gray-400 text-sm">
-                    {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB • {selectedFile.type}
+                    {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB • {selectedFile.type || 'Unknown type'}
                   </p>
                 </div>
                 {!uploadProgress.isUploading && (
@@ -168,23 +230,31 @@ const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, preSelectedF
               {/* Metadata Form */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label className="text-white font-medium">Song Title *</Label>
+                  <Label className="text-white font-medium flex items-center">
+                    Song Title 
+                    <span className="text-red-400 ml-1">*</span>
+                  </Label>
                   <Input
                     value={metadata.title}
                     onChange={(e) => setMetadata(prev => ({ ...prev, title: e.target.value }))}
                     className="bg-white/10 border-white/20 text-white placeholder:text-gray-500 focus:border-purple-400 transition-colors"
                     placeholder="Enter song title"
                     disabled={uploadProgress.isUploading}
+                    required
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-white font-medium">Artist *</Label>
+                  <Label className="text-white font-medium flex items-center">
+                    Artist 
+                    <span className="text-red-400 ml-1">*</span>
+                  </Label>
                   <Input
                     value={metadata.artist}
                     onChange={(e) => setMetadata(prev => ({ ...prev, artist: e.target.value }))}
                     className="bg-white/10 border-white/20 text-white placeholder:text-gray-500 focus:border-purple-400 transition-colors"
                     placeholder="Enter artist name"
                     disabled={uploadProgress.isUploading}
+                    required
                   />
                 </div>
                 <div className="space-y-2">
@@ -214,7 +284,7 @@ const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, preSelectedF
                 <Button
                   onClick={handleUpload}
                   disabled={!isFormValid || uploadProgress.isUploading}
-                  className="flex-1 gradient-primary hover:opacity-90 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed text-lg py-3"
+                  className="flex-1 gradient-primary hover:opacity-90 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-lg py-3"
                 >
                   {uploadProgress.isUploading ? (
                     <>
