@@ -1,13 +1,17 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import Layout from '@/components/Layout';
 import MusicPlayer from '@/components/MusicPlayer';
 import AudioVisualizer from '@/components/AudioVisualizer';
 import MusicCard from '@/components/MusicCard';
 import AuthButton from '@/components/AuthButton';
+import AIRecommendations from '@/components/AIRecommendations';
+import SmartPlaylistGenerator from '@/components/SmartPlaylistGenerator';
+import LiveActivityFeed from '@/components/LiveActivityFeed';
+import VoiceSearch from '@/components/VoiceSearch';
 import { Button } from '@/components/ui/button';
-import { Play, TrendingUp, Clock, Star, Music, Sparkles } from 'lucide-react';
-import { useFeaturedSongs, useRecentlyPlayed } from '@/hooks/useSongs';
+import { Play, TrendingUp, Clock, Star, Music, Sparkles, Search, Filter } from 'lucide-react';
+import { useFeaturedSongs, useRecentlyPlayed, useSongs } from '@/hooks/useSongs';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 
@@ -15,7 +19,10 @@ const Index = () => {
   const { user } = useAuth();
   const { data: featuredTracks = [] } = useFeaturedSongs();
   const { data: recentlyPlayed = [] } = useRecentlyPlayed();
+  const { data: allSongs = [] } = useSongs();
   const { playSong, setPlaylist } = useMusicPlayer();
+  const [searchResults, setSearchResults] = useState(featuredTracks);
+  const [isSearching, setIsSearching] = useState(false);
 
   const handleStartListening = () => {
     if (featuredTracks.length > 0) {
@@ -24,10 +31,29 @@ const Index = () => {
     }
   };
 
+  const handleSearch = (query: string) => {
+    setIsSearching(true);
+    
+    if (!query.trim()) {
+      setSearchResults(featuredTracks);
+      setIsSearching(false);
+      return;
+    }
+
+    const filtered = allSongs.filter(song =>
+      song.title.toLowerCase().includes(query.toLowerCase()) ||
+      song.artist.toLowerCase().includes(query.toLowerCase()) ||
+      song.genre?.toLowerCase().includes(query.toLowerCase())
+    );
+
+    setSearchResults(filtered);
+    setIsSearching(false);
+  };
+
   return (
     <Layout>
       <div className="space-y-12 pb-32">
-        {/* Hero Section */}
+        {/* Enhanced Hero Section */}
         <section className="relative overflow-hidden rounded-3xl glass p-8 md:p-16 animate-fade-in">
           <div className="absolute inset-0 gradient-primary opacity-10 animate-shimmer"></div>
           <div className="absolute top-4 right-4">
@@ -39,11 +65,20 @@ const Index = () => {
                 <h1 className="text-5xl md:text-7xl font-bold text-white leading-tight">
                   Your Music,
                   <br />
-                  <span className="text-gradient animate-glow">Your Experience</span>
+                  <span className="text-gradient animate-glow">Reimagined</span>
                 </h1>
                 <p className="text-xl md:text-2xl text-gray-300 leading-relaxed">
-                  Stream, discover, and enjoy amazing music. Create playlists and enjoy a personalized listening experience.
+                  Experience AI-powered music discovery, smart playlists, and real-time collaboration. The future of music is here.
                 </p>
+                
+                {/* Enhanced Search Bar */}
+                <div className="max-w-lg">
+                  <VoiceSearch 
+                    onSearch={handleSearch}
+                    placeholder="Ask AI to find your perfect song..."
+                  />
+                </div>
+
                 <div className="flex flex-col sm:flex-row gap-4">
                   <Button 
                     onClick={handleStartListening}
@@ -71,7 +106,7 @@ const Index = () => {
           </div>
         </section>
 
-        {/* Quick Stats */}
+        {/* Quick Stats with Modern UI */}
         <section className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {[
             { icon: TrendingUp, value: featuredTracks.length, label: "Songs Available", color: "text-purple-400", delay: "0s" },
@@ -80,30 +115,62 @@ const Index = () => {
           ].map((stat, index) => (
             <div 
               key={index}
-              className="glass p-8 rounded-2xl text-center hover-lift animate-fade-in"
+              className="glass p-8 rounded-2xl text-center hover-lift animate-fade-in group relative overflow-hidden"
               style={{ animationDelay: stat.delay }}
             >
-              <stat.icon className={`h-10 w-10 ${stat.color} mx-auto mb-4 animate-bounce-gentle`} />
-              <h3 className="text-3xl font-bold text-white mb-2">{stat.value}</h3>
-              <p className="text-gray-400 text-lg">{stat.label}</p>
+              <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-pink-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              <stat.icon className={`h-10 w-10 ${stat.color} mx-auto mb-4 animate-bounce-gentle relative z-10`} />
+              <h3 className="text-3xl font-bold text-white mb-2 relative z-10">{stat.value}</h3>
+              <p className="text-gray-400 text-lg relative z-10">{stat.label}</p>
             </div>
           ))}
         </section>
 
-        {/* Featured Music */}
+        {/* AI-Powered Features Grid */}
+        {user && (
+          <section className="grid lg:grid-cols-3 gap-8 animate-fade-in" style={{ animationDelay: "0.3s" }}>
+            <div className="lg:col-span-2 space-y-8">
+              <AIRecommendations />
+              <SmartPlaylistGenerator />
+            </div>
+            <div>
+              <LiveActivityFeed />
+            </div>
+          </section>
+        )}
+
+        {/* Featured Music with Enhanced UI */}
         <section className="space-y-8 animate-fade-in" style={{ animationDelay: "0.4s" }}>
           <div className="flex items-center justify-between">
-            <h2 className="text-4xl font-bold text-white">Featured Tracks</h2>
+            <div className="flex items-center space-x-4">
+              <h2 className="text-4xl font-bold text-white">
+                {isSearching ? 'Searching...' : searchResults.length !== featuredTracks.length ? 'Search Results' : 'Featured Tracks'}
+              </h2>
+              {searchResults.length !== featuredTracks.length && (
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="border-white/20 text-white hover:bg-white/10"
+                  onClick={() => {
+                    setSearchResults(featuredTracks);
+                    setIsSearching(false);
+                  }}
+                >
+                  Clear Search
+                </Button>
+              )}
+            </div>
             <Button 
               variant="outline" 
               className="border-white/20 text-white hover:bg-white/10 transition-all duration-300 transform hover:scale-105"
             >
-              View All
+              <Filter className="h-4 w-4 mr-2" />
+              Filters
             </Button>
           </div>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-8">
-            {featuredTracks.map((track, index) => (
+            {searchResults.map((track, index) => (
               <div 
                 key={track.id}
                 className="animate-fade-in"
@@ -116,14 +183,22 @@ const Index = () => {
                   duration={track.duration}
                   albumArt={track.cover_url}
                   song={track}
-                  allSongs={featuredTracks}
+                  allSongs={searchResults}
                 />
               </div>
             ))}
           </div>
+
+          {searchResults.length === 0 && !isSearching && (
+            <div className="text-center py-16">
+              <Search className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-white mb-2">No songs found</h3>
+              <p className="text-gray-400">Try adjusting your search terms</p>
+            </div>
+          )}
         </section>
 
-        {/* Recently Played - Only show to authenticated users */}
+        {/* Recently Played - Enhanced for authenticated users */}
         {user && recentlyPlayed.length > 0 && (
           <section className="space-y-8 animate-slide-up" style={{ animationDelay: "0.5s" }}>
             <h2 className="text-4xl font-bold text-white">Recently Played</h2>
@@ -132,17 +207,18 @@ const Index = () => {
                 {recentlyPlayed.map((track, index) => (
                   <div
                     key={index}
-                    className="flex items-center space-x-6 p-6 hover:bg-white/5 transition-all duration-300 cursor-pointer group animate-fade-in"
+                    className="flex items-center space-x-6 p-6 hover:bg-white/5 transition-all duration-300 cursor-pointer group animate-fade-in relative overflow-hidden"
                     style={{ animationDelay: `${0.1 * index}s` }}
                     onClick={() => {
                       setPlaylist(recentlyPlayed);
                       playSong(track);
                     }}
                   >
-                    <div className="w-16 h-16 gradient-secondary rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                    <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                    <div className="w-16 h-16 gradient-secondary rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 relative z-10">
                       <Music className="h-8 w-8 text-white" />
                     </div>
-                    <div className="flex-1">
+                    <div className="flex-1 relative z-10">
                       <p className="text-white font-semibold text-lg group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-purple-400 group-hover:to-pink-400 transition-all duration-300">
                         {track.title}
                       </p>
@@ -150,13 +226,13 @@ const Index = () => {
                         {track.artist}
                       </p>
                     </div>
-                    <div className="text-gray-400 text-sm font-medium">
+                    <div className="text-gray-400 text-sm font-medium relative z-10">
                       {track.duration ? `${Math.floor(track.duration / 60)}:${(track.duration % 60).toString().padStart(2, '0')}` : ''}
                     </div>
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="opacity-0 group-hover:opacity-100 transition-all duration-300 text-purple-400 hover:text-purple-300 transform translate-x-4 group-hover:translate-x-0"
+                      className="opacity-0 group-hover:opacity-100 transition-all duration-300 text-purple-400 hover:text-purple-300 transform translate-x-4 group-hover:translate-x-0 relative z-10"
                     >
                       <Play className="h-5 w-5" />
                     </Button>
