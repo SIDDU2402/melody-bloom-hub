@@ -186,3 +186,81 @@ input[type="password"] {
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
+
+/* Mobile-specific enhancements */
+@media (max-width: 768px) {
+  .music-card-hover {
+    transform: none !important;
+  }
+  
+  .music-card-hover:active {
+    transform: scale(0.95) !important;
+    transition: transform 0.1s ease-out;
+  }
+
+  .hover-lift {
+    transform: none !important;
+  }
+  
+  .hover-lift:active {
+    transform: translateY(2px) scale(0.98) !important;
+    transition: transform 0.1s ease-out;
+  }
+}
+
+/* Touch-friendly buttons */
+@media (pointer: coarse) {
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* Mobile safe areas */
+.mobile-safe-area {
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-top: env(safe-area-inset-top);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+/* Enhanced mobile glass effect */
+@media (max-width: 768px) {
+  .glass {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+}
+
+/* Mobile drawer animations */
+@keyframes slide-up-mobile {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slide-down-mobile {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+}
+
+.animate-slide-up-mobile {
+  animation: slide-up-mobile 0.3s ease-out;
+}
+
+.animate-slide-down-mobile {
+  animation: slide-down-mobile 0.3s ease-out;
+}
