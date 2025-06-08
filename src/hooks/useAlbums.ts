@@ -77,7 +77,7 @@ export const useAlbums = () => {
     albums,
     isLoading,
     error,
-    createAlbum: createAlbumMutation.mutate,
+    createAlbum: createAlbumMutation.mutateAsync, // Changed to mutateAsync to return a promise
     isCreatingAlbum: createAlbumMutation.isPending,
   };
 };
