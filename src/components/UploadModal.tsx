@@ -5,9 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
-import { Upload, X, Music, CheckCircle } from 'lucide-react';
+import { Upload, X, Music, CheckCircle, AlertCircle } from 'lucide-react';
 import { useUpload } from '@/hooks/useUpload';
-import AlbumSelector from './AlbumSelector';
 
 interface UploadModalProps {
   isOpen: boolean;
@@ -20,7 +19,7 @@ const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, preSelectedF
   const [metadata, setMetadata] = useState({
     title: '',
     artist: '',
-    albumId: null as string | null,
+    album: '',
     genre: '',
   });
   const [dragOver, setDragOver] = useState(false);
@@ -30,7 +29,7 @@ const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, preSelectedF
   useEffect(() => {
     if (!isOpen) {
       setSelectedFile(null);
-      setMetadata({ title: '', artist: '', albumId: null, genre: '' });
+      setMetadata({ title: '', artist: '', album: '', genre: '' });
       setDragOver(false);
     }
   }, [isOpen]);
@@ -121,12 +120,7 @@ const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, preSelectedF
 
     try {
       console.log('Starting upload with metadata:', metadata);
-      await uploadSong(selectedFile, {
-        title: metadata.title,
-        artist: metadata.artist,
-        album: metadata.albumId,
-        genre: metadata.genre || undefined,
-      });
+      await uploadSong(selectedFile, metadata);
       // The modal will close automatically after successful upload
     } catch (error) {
       console.error('Upload failed:', error);
@@ -263,11 +257,14 @@ const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, preSelectedF
                     required
                   />
                 </div>
-                <div className="md:col-span-2">
-                  <AlbumSelector
-                    selectedAlbumId={metadata.albumId}
-                    onAlbumSelect={(albumId) => setMetadata(prev => ({ ...prev, albumId }))}
-                    artistName={metadata.artist}
+                <div className="space-y-2">
+                  <Label className="text-white font-medium">Album</Label>
+                  <Input
+                    value={metadata.album}
+                    onChange={(e) => setMetadata(prev => ({ ...prev, album: e.target.value }))}
+                    className="bg-white/10 border-white/20 text-white placeholder:text-gray-500 focus:border-purple-400 transition-colors"
+                    placeholder="Enter album name"
+                    disabled={uploadProgress.isUploading}
                   />
                 </div>
                 <div className="space-y-2">

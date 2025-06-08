@@ -21,7 +21,7 @@ export const useUpload = () => {
   const uploadSong = async (file: File, metadata: {
     title: string;
     artist: string;
-    album?: string | null;
+    album?: string;
     genre?: string;
   }) => {
     if (!user) {
@@ -141,7 +141,7 @@ export const useUpload = () => {
         user_id: user.id,
         title: metadata.title.trim(),
         artist: metadata.artist.trim(),
-        album_id: metadata.album || null,
+        album: metadata.album?.trim() || null,
         genre: metadata.genre?.trim() || null,
         duration: duration,
         file_url: audioUrl,
@@ -173,7 +173,6 @@ export const useUpload = () => {
       // Invalidate queries to refresh the UI
       await queryClient.invalidateQueries({ queryKey: ['songs'] });
       await queryClient.invalidateQueries({ queryKey: ['featured-songs'] });
-      await queryClient.invalidateQueries({ queryKey: ['albums'] });
 
       toast({
         title: "Upload successful! 🎵",
