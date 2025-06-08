@@ -39,7 +39,7 @@ const AlbumSelector: React.FC<AlbumSelectorProps> = ({
         release_date: newAlbumData.release_date || undefined,
       });
       
-      if (album && album.id) {
+      if (album) {
         onAlbumSelect(album.id);
         setIsCreateDialogOpen(false);
         setNewAlbumData({ title: '', genre: '', release_date: '' });

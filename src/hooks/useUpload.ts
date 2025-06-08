@@ -34,6 +34,8 @@ export const useUpload = () => {
     }
 
     console.log('Starting upload process for:', file.name);
+    console.log('File type:', file.type);
+    console.log('File size:', file.size);
     setUploadProgress({ progress: 0, isUploading: true });
 
     try {
@@ -47,6 +49,7 @@ export const useUpload = () => {
         throw new Error('Please select a valid audio file (MP3, WAV, M4A, AAC, OGG, FLAC)');
       }
 
+      // Validate file size (100MB limit)
       if (file.size > 104857600) {
         throw new Error('File size must be less than 100MB');
       }
@@ -58,6 +61,8 @@ export const useUpload = () => {
       const timestamp = Date.now();
       const randomId = Math.random().toString(36).substring(2);
       const fileName = `${user.id}/${timestamp}-${randomId}.${fileExtension}`;
+      
+      console.log('Uploading to path:', fileName);
       
       setUploadProgress({ progress: 20, isUploading: true });
 
@@ -72,9 +77,16 @@ export const useUpload = () => {
 
       if (audioError) {
         console.error('Storage upload error:', audioError);
+        
+        // If bucket doesn't exist, the error message will indicate that
+        if (audioError.message.includes('Bucket not found')) {
+          throw new Error('Storage bucket not configured. Please contact administrator.');
+        }
+        
         throw new Error(`Upload failed: ${audioError.message}`);
       }
 
+      console.log('File uploaded successfully:', audioData);
       setUploadProgress({ progress: 60, isUploading: true });
 
       // Get public URL for the audio file
@@ -82,6 +94,7 @@ export const useUpload = () => {
         .from('music-files')
         .getPublicUrl(fileName);
 
+      console.log('Public URL generated:', audioUrl);
       setUploadProgress({ progress: 70, isUploading: true });
 
       // Get audio duration
@@ -89,23 +102,36 @@ export const useUpload = () => {
       try {
         const audio = new Audio();
         duration = await new Promise<number>((resolve) => {
-          const timeout = setTimeout(() => resolve(0), 8000);
+          const timeout = setTimeout(() => {
+            console.warn('Timeout loading audio metadata, using default duration');
+            resolve(0);
+          }, 8000);
+
           audio.addEventListener('loadedmetadata', () => {
             clearTimeout(timeout);
-            resolve(Math.floor(audio.duration) || 0);
+            const audioDuration = Math.floor(audio.duration);
+            console.log('Audio duration detected:', audioDuration);
+            resolve(audioDuration || 0);
           });
-          audio.addEventListener('error', () => {
+          
+          audio.addEventListener('error', (e) => {
             clearTimeout(timeout);
+            console.warn('Error loading audio metadata:', e);
             resolve(0);
           });
+          
+          // Create object URL for local file
           const objectUrl = URL.createObjectURL(file);
           audio.src = objectUrl;
+          
+          // Clean up object URL after loading
           audio.addEventListener('loadedmetadata', () => {
             URL.revokeObjectURL(objectUrl);
           });
         });
       } catch (error) {
         console.warn('Could not determine audio duration:', error);
+        duration = 0;
       }
 
       setUploadProgress({ progress: 85, isUploading: true });

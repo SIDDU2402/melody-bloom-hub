@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -40,16 +41,6 @@ const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, preSelectedF
       handleFileSelection(preSelectedFile);
     }
   }, [isOpen, preSelectedFile]);
-
-  // Close modal when upload is complete
-  useEffect(() => {
-    if (uploadProgress.progress === 100 && !uploadProgress.isUploading) {
-      const timer = setTimeout(() => {
-        onClose();
-      }, 1500); // Give user time to see the success message
-      return () => clearTimeout(timer);
-    }
-  }, [uploadProgress.progress, uploadProgress.isUploading, onClose]);
 
   const validateFile = (file: File): boolean => {
     const validTypes = [
@@ -136,7 +127,7 @@ const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, preSelectedF
         album: metadata.albumId,
         genre: metadata.genre || undefined,
       });
-      // Modal will close automatically via useEffect when upload completes
+      // The modal will close automatically after successful upload
     } catch (error) {
       console.error('Upload failed:', error);
       // Error is already handled in the useUpload hook
