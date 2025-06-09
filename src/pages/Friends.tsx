@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useEffect } from 'react';
 import { Users, Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -7,10 +7,36 @@ import { Badge } from '@/components/ui/badge';
 import Layout from '@/components/Layout';
 import FriendsList from '@/components/FriendsList';
 import FriendRequests from '@/components/FriendRequests';
-import { useFriendRequests } from '@/hooks/useFriends';
+import { useFriendRequests, useCheckDatabaseSchema } from '@/hooks/useFriends';
+import { toast } from '@/hooks/use-toast';
 
 const Friends = () => {
-  const { data: requests = [] } = useFriendRequests();
+  const { data: requests = [], isLoading: requestsLoading, error: requestsError } = useFriendRequests();
+  const { data: schemaCheck, isLoading: schemaLoading, error: schemaError } = useCheckDatabaseSchema();
+
+  // Log diagnostic information
+  useEffect(() => {
+    console.log('Friends page - requests:', { requests, requestsLoading, requestsError });
+    console.log('Friends page - schema check:', { schemaCheck, schemaLoading, schemaError });
+    
+    if (requestsError) {
+      console.error('Error loading friend requests:', requestsError);
+      toast({
+        title: 'Error loading friend requests',
+        description: requestsError.message || 'An unknown error occurred',
+        variant: 'destructive',
+      });
+    }
+    
+    if (schemaError) {
+      console.error('Database schema check failed:', schemaError);
+      toast({
+        title: 'Database schema issue detected',
+        description: schemaError.message || 'There may be an issue with the database structure',
+        variant: 'destructive',
+      });
+    }
+  }, [requests, requestsLoading, requestsError, schemaCheck, schemaLoading, schemaError]);
 
   return (
     <Layout>
