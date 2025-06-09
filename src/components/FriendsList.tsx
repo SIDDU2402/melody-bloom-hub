@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useFriends, useSearchUsers, useSendFriendRequest, useCreateOrGetDMRoom } from '@/hooks/useFriends';
+import { useFriends, useSearchUsers, useSendFriendRequest } from '@/hooks/useFriends';
+import { useCreateOrGetDMRoom } from '@/hooks/useChat';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
 
