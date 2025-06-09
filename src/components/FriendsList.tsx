@@ -40,7 +40,18 @@ const FriendsList = () => {
     try {
       console.log('Starting chat with friend:', friendId);
       const roomId = await createDMRoom.mutateAsync(friendId);
-      navigate(`/chat/${roomId}`);
+      console.log('Room ID from createDMRoom:', roomId); // Log the received room ID
+
+      if (typeof roomId === 'string' && roomId.trim() !== '') {
+        navigate(`/chat/${roomId}`);
+      } else {
+        console.error('Invalid or empty room ID received:', roomId);
+        toast({
+          title: "Error",
+          description: "Could not create or find chat room. Invalid room ID received.",
+          variant: "destructive",
+        });
+      }
     } catch (error) {
       console.error('Error starting chat:', error);
       toast({
