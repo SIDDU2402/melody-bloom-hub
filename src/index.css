@@ -1,4 +1,3 @@
-
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&display=swap');
 @tailwind base;
 @tailwind components;
@@ -232,6 +231,19 @@ h1, h2, h3, h4, h5, h6 {
   box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
 }
 
+/* Mobile-Enhanced Player Controls */
+.mobile-player-control {
+  @apply w-14 h-14 rounded-full glass-intense flex items-center justify-center transition-all duration-300 active:scale-95;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  touch-action: manipulation;
+}
+
+.mobile-player-control-primary {
+  @apply w-20 h-20 rounded-full gradient-primary flex items-center justify-center transition-all duration-300 active:scale-95;
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
+  touch-action: manipulation;
+}
+
 /* Stunning Scrollbars */
 .scrollbar-custom {
   scrollbar-width: thin;
@@ -259,18 +271,99 @@ h1, h2, h3, h4, h5, h6 {
   background-clip: content-box;
 }
 
-/* Responsive Enhancements */
+/* Enhanced Mobile Responsiveness */
 @media (max-width: 768px) {
   .glass-card {
-    @apply p-6 rounded-2xl;
+    @apply p-4 rounded-2xl;
+  }
+  
+  .music-card-enhanced {
+    @apply p-4;
   }
   
   .music-card-enhanced:hover {
-    transform: translateY(-6px) scale(1.01);
+    transform: translateY(-4px) scale(1.01);
   }
   
   .music-card-enhanced:active {
     transform: translateY(-2px) scale(0.98);
+  }
+
+  /* Mobile Touch Targets */
+  .mobile-touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Mobile Typography */
+  .mobile-text-sm {
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+  }
+
+  .mobile-text-base {
+    font-size: 1rem;
+    line-height: 1.5rem;
+  }
+
+  .mobile-text-lg {
+    font-size: 1.125rem;
+    line-height: 1.75rem;
+  }
+
+  .mobile-text-xl {
+    font-size: 1.25rem;
+    line-height: 1.75rem;
+  }
+
+  .mobile-text-2xl {
+    font-size: 1.5rem;
+    line-height: 2rem;
+  }
+
+  .mobile-text-3xl {
+    font-size: 1.875rem;
+    line-height: 2.25rem;
+  }
+
+  /* Mobile Spacing */
+  .mobile-spacing-tight {
+    @apply space-y-2;
+  }
+
+  .mobile-spacing-normal {
+    @apply space-y-4;
+  }
+
+  .mobile-spacing-loose {
+    @apply space-y-6;
+  }
+}
+
+/* Ultra Mobile (Small Phones) */
+@media (max-width: 375px) {
+  .glass-card {
+    @apply p-3 rounded-xl;
+  }
+  
+  .music-card-enhanced {
+    @apply p-3;
+  }
+
+  /* Ultra mobile typography */
+  .ultra-mobile-text-xs {
+    font-size: 0.75rem;
+    line-height: 1rem;
+  }
+
+  .ultra-mobile-text-sm {
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+  }
+
+  .ultra-mobile-text-base {
+    font-size: 0.9375rem;
+    line-height: 1.375rem;
   }
 }
 
@@ -305,15 +398,103 @@ h1, h2, h3, h4, h5, h6 {
 /* Enhanced Mobile Experience */
 @media (max-width: 640px) {
   .mobile-optimized {
-    @apply px-4 py-6;
+    @apply px-3 py-4;
   }
   
   .mobile-card {
-    @apply glass rounded-2xl p-4 transition-all duration-300;
+    @apply glass rounded-xl p-3 transition-all duration-300;
+    touch-action: manipulation;
   }
   
   .mobile-card:active {
     transform: scale(0.98);
     background: rgba(255, 255, 255, 0.12);
+  }
+
+  /* Mobile Grid Adjustments */
+  .mobile-grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+
+  .mobile-grid-1 {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  /* Mobile Button Enhancements */
+  .mobile-button {
+    @apply px-6 py-3 text-base font-semibold rounded-xl transition-all duration-300;
+    min-height: 48px;
+    touch-action: manipulation;
+  }
+
+  .mobile-button-sm {
+    @apply px-4 py-2 text-sm font-medium rounded-lg transition-all duration-300;
+    min-height: 40px;
+    touch-action: manipulation;
+  }
+
+  /* Mobile Navigation Enhancements */
+  .mobile-nav-item {
+    @apply flex flex-col items-center justify-center p-3 rounded-lg transition-all duration-300;
+    min-height: 56px;
+    min-width: 56px;
+    touch-action: manipulation;
+  }
+
+  /* Mobile Player Enhancements */
+  .mobile-player {
+    @apply p-4;
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+  }
+
+  .mobile-player-progress {
+    height: 6px;
+    border-radius: 3px;
+  }
+
+  /* Mobile Safe Areas */
+  .mobile-safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .mobile-safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .mobile-safe-left {
+    padding-left: env(safe-area-inset-left);
+  }
+
+  .mobile-safe-right {
+    padding-right: env(safe-area-inset-right);
+  }
+}
+
+/* High DPI Displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .crisp-edges {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+  }
+}
+
+/* Dark Mode Enhancements for Mobile */
+@media (prefers-color-scheme: dark) and (max-width: 768px) {
+  .mobile-dark-enhance {
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(20px);
+  }
+}
+
+/* Reduced Motion for Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

@@ -86,18 +86,19 @@ const MusicCard: React.FC<MusicCardProps> = ({
       
       {/* Current Song Indicator */}
       {isCurrentSong && (
-        <div className="absolute top-3 left-3 z-20">
-          <div className="flex items-center space-x-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
+        <div className="absolute top-2 left-2 z-20">
+          <div className="flex items-center space-x-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white px-2 py-1 rounded-full ultra-mobile-text-xs font-bold shadow-lg">
             <Zap className="h-3 w-3 animate-pulse" />
-            <span>NOW PLAYING</span>
+            <span className="hidden sm:inline">NOW PLAYING</span>
+            <span className="sm:hidden">LIVE</span>
           </div>
         </div>
       )}
       
-      <div className="relative z-10 p-6">
-        <div className="relative mb-6">
+      <div className="relative z-10 p-4 sm:p-6">
+        <div className="relative mb-4 sm:mb-6">
           <div 
-            className={`w-full aspect-square rounded-2xl mb-4 overflow-hidden transition-all duration-500 group-hover:scale-105 group-hover:shadow-2xl ${
+            className={`w-full aspect-square rounded-xl sm:rounded-2xl mb-3 sm:mb-4 overflow-hidden transition-all duration-500 group-hover:scale-105 group-hover:shadow-2xl ${
               albumArt ? 'bg-cover bg-center' : 'gradient-secondary'
             }`}
             style={albumArt ? { backgroundImage: `url(${albumArt})` } : {}}
@@ -105,36 +106,36 @@ const MusicCard: React.FC<MusicCardProps> = ({
             {!albumArt && (
               <div className="w-full h-full flex items-center justify-center relative">
                 <div className="absolute inset-0 bg-gradient-to-br from-purple-500 via-pink-500 to-blue-500 animate-morph opacity-80"></div>
-                <Music className="h-16 w-16 text-white relative z-10 animate-float-gentle drop-shadow-lg" />
+                <Music className="h-12 w-12 sm:h-16 sm:w-16 text-white relative z-10 animate-float-gentle drop-shadow-lg" />
               </div>
             )}
             
             {/* Enhanced Play Button Overlay */}
-            <div className={`absolute inset-0 bg-black/60 rounded-2xl flex items-center justify-center transition-all duration-500 ${
+            <div className={`absolute inset-0 bg-black/60 rounded-xl sm:rounded-2xl flex items-center justify-center transition-all duration-500 ${
               isCurrentSong && isPlaying 
                 ? 'opacity-100' 
                 : 'opacity-0 group-hover:opacity-100'
             }`}>
               <Button 
                 onClick={handlePlay}
-                className={`player-control-primary group/play hover:scale-125 transition-all duration-300 shadow-2xl ${
+                className={`mobile-player-control-primary sm:player-control-primary group/play hover:scale-125 transition-all duration-300 shadow-2xl ${
                   isCurrentSong ? 'animate-pulse-glow' : ''
                 }`}
               >
-                <Play className="h-8 w-8 ml-1 group-hover/play:scale-110 transition-transform duration-300" />
+                <Play className="h-6 w-6 sm:h-8 sm:w-8 ml-1 group-hover/play:scale-110 transition-transform duration-300" />
                 <div className="absolute inset-0 bg-white/20 rounded-full opacity-0 group-hover/play:opacity-100 transition-opacity duration-300"></div>
               </Button>
             </div>
 
             {/* Animated Sound Waves for Current Song */}
             {isCurrentSong && isPlaying && (
-              <div className="absolute top-4 right-4 flex space-x-1">
+              <div className="absolute top-3 right-3 flex space-x-1">
                 {[0, 1, 2].map((index) => (
                   <div
                     key={index}
                     className="w-1 bg-white rounded-full animate-pulse"
                     style={{
-                      height: `${16 + Math.random() * 8}px`,
+                      height: `${12 + Math.random() * 6}px`,
                       animationDelay: `${index * 0.2}s`,
                       animationDuration: '0.8s'
                     }}
@@ -145,29 +146,29 @@ const MusicCard: React.FC<MusicCardProps> = ({
           </div>
         </div>
         
-        <div className="space-y-3">
-          <div className="space-y-2">
-            <h3 className="font-bold text-white truncate text-lg group-hover:text-gradient transition-all duration-500 text-shadow">
+        <div className="mobile-spacing-tight sm:space-y-3">
+          <div className="mobile-spacing-tight sm:space-y-2">
+            <h3 className="font-bold text-white truncate mobile-text-base sm:text-lg group-hover:text-gradient transition-all duration-500 text-shadow">
               {title}
             </h3>
-            <p className="text-gray-400 truncate group-hover:text-gray-300 transition-colors duration-300 font-medium">
+            <p className="text-gray-400 truncate group-hover:text-gray-300 transition-colors duration-300 font-medium mobile-text-sm sm:text-base">
               {artist}
             </p>
           </div>
           
           <div className="flex items-center justify-between pt-2">
             <div className="flex items-center space-x-2">
-              <div className="w-2 h-2 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full"></div>
-              <span className="text-xs text-gray-500 font-semibold bg-white/5 px-2 py-1 rounded-lg">
+              <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full"></div>
+              <span className="ultra-mobile-text-xs sm:text-xs text-gray-500 font-semibold bg-white/5 px-2 py-1 rounded-lg">
                 {formatDuration(duration)}
               </span>
             </div>
             
-            <div className="flex space-x-2 opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-x-4 group-hover:translate-x-0">
+            <div className="flex space-x-1 sm:space-x-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-500 transform translate-x-0 sm:translate-x-4 sm:group-hover:translate-x-0">
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className={`player-control transition-all duration-300 hover:scale-125 ${
+                className={`mobile-player-control sm:player-control transition-all duration-300 hover:scale-125 ${
                   isFavorite 
                     ? 'text-red-400 hover:text-red-300' 
                     : 'text-gray-400 hover:text-red-400'
@@ -183,7 +184,7 @@ const MusicCard: React.FC<MusicCardProps> = ({
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="player-control text-gray-400 hover:text-white transition-all duration-300 hover:scale-125"
+                className="mobile-player-control sm:player-control text-gray-400 hover:text-white transition-all duration-300 hover:scale-125 hidden sm:flex"
               >
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
