@@ -15,26 +15,32 @@ const FriendsList = () => {
   const [showSearch, setShowSearch] = useState(false);
   const navigate = useNavigate();
   
-  const { data: friends = [] } = useFriends();
+  const { data: friends = [], isLoading: friendsLoading, error: friendsError } = useFriends();
   const searchUsers = useSearchUsers();
   const sendFriendRequest = useSendFriendRequest();
   const createDMRoom = useCreateOrGetDMRoom();
 
+  console.log('FriendsList render - friends:', friends, 'loading:', friendsLoading, 'error:', friendsError);
+
   const handleSearch = () => {
     if (searchTerm.trim()) {
+      console.log('Searching for:', searchTerm);
       searchUsers.mutate(searchTerm);
     }
   };
 
   const handleSendFriendRequest = (userId: string) => {
+    console.log('Sending friend request to:', userId);
     sendFriendRequest.mutate(userId);
   };
 
   const handleStartChat = async (friendId: string) => {
     try {
+      console.log('Starting chat with friend:', friendId);
       const roomId = await createDMRoom.mutateAsync(friendId);
       navigate(`/chat/${roomId}`);
     } catch (error) {
+      console.error('Error starting chat:', error);
       toast({
         title: "Error",
         description: "Failed to start chat",
@@ -42,6 +48,10 @@ const FriendsList = () => {
       });
     }
   };
+
+  if (friendsError) {
+    console.error('Friends error:', friendsError);
+  }
 
   return (
     <div className="p-6 space-y-6">
@@ -70,6 +80,14 @@ const FriendsList = () => {
               <Search className="h-4 w-4" />
             </Button>
           </div>
+
+          {searchUsers.isError && (
+            <div className="mt-4 p-3 bg-red-500/20 border border-red-500/30 rounded-lg">
+              <p className="text-red-400 text-sm">
+                Error searching users: {searchUsers.error?.message}
+              </p>
+            </div>
+          )}
 
           {searchUsers.data && searchUsers.data.length > 0 && (
             <div className="mt-4 space-y-2">
@@ -103,6 +121,12 @@ const FriendsList = () => {
               ))}
             </div>
           )}
+
+          {searchUsers.data && searchUsers.data.length === 0 && searchUsers.isSuccess && (
+            <div className="mt-4 p-3 bg-gray-500/20 border border-gray-500/30 rounded-lg">
+              <p className="text-gray-400 text-sm">No users found matching your search.</p>
+            </div>
+          )}
         </Card>
       )}
 
@@ -112,7 +136,19 @@ const FriendsList = () => {
           <h2 className="text-lg font-semibold text-white">Your Friends ({friends.length})</h2>
         </div>
         
-        {friends.length === 0 ? (
+        {friendsLoading && (
+          <Card className="glass p-8 text-center">
+            <p className="text-gray-400">Loading friends...</p>
+          </Card>
+        )}
+        
+        {friendsError && (
+          <Card className="glass p-8 text-center">
+            <p className="text-red-400">Error loading friends: {friendsError.message}</p>
+          </Card>
+        )}
+        
+        {!friendsLoading && !friendsError && friends.length === 0 && (
           <Card className="glass p-8 text-center">
             <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-white mb-2">No friends yet</h3>
@@ -122,7 +158,9 @@ const FriendsList = () => {
               Find Friends
             </Button>
           </Card>
-        ) : (
+        )}
+        
+        {!friendsLoading && !friendsError && friends.length > 0 && (
           <div className="grid gap-4">
             {friends.map((friendship: any) => {
               const friend = friendship.requester_id === friendship.requester.id 
