@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useFriends, useSearchUsers, useSendFriendRequest } from '@/hooks/useFriends';
+import { useAuth } from '@/contexts/AuthContext';
 import { useCreateOrGetDMRoom } from '@/hooks/useChat';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
@@ -15,6 +16,7 @@ const FriendsList = () => {
   const [showSearch, setShowSearch] = useState(false);
   const navigate = useNavigate();
   
+  const { user: currentUser } = useAuth();
   const { data: friends = [], isLoading: friendsLoading, error: friendsError } = useFriends();
   const searchUsers = useSearchUsers();
   const sendFriendRequest = useSendFriendRequest();
@@ -163,29 +165,37 @@ const FriendsList = () => {
         {!friendsLoading && !friendsError && friends.length > 0 && (
           <div className="grid gap-4">
             {friends.map((friendship: any) => {
-              const friend = friendship.requester_id === friendship.requester.id 
-                ? friendship.addressee 
-                : friendship.requester;
+              // Determine the actual friend profile based on the current user
+              const friendProfile = currentUser?.id === friendship.requester_id 
+                                  ? friendship.addressee 
+                                  : friendship.requester;
+
+              // If friendProfile is somehow undefined (e.g., data inconsistency or currentUser is unexpectedly null),
+              // skip rendering this item to prevent errors.
+              if (!friendProfile) {
+                console.warn('Could not determine friend profile for friendship:', friendship, 'Current user:', currentUser);
+                return null;
+              }
               
               return (
                 <Card key={friendship.id} className="glass p-4 hover:bg-white/10 transition-colors">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
                       <Avatar className="h-12 w-12">
-                        <AvatarImage src={friend.avatar_url || ''} />
+                        <AvatarImage src={friendProfile.avatar_url || ''} />
                         <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-500 text-white">
-                          {friend.full_name?.charAt(0) || 'U'}
+                          {friendProfile.full_name?.charAt(0) || 'U'}
                         </AvatarFallback>
                       </Avatar>
                       <div>
-                        <h3 className="font-medium text-white">{friend.full_name || 'Unknown User'}</h3>
+                        <h3 className="font-medium text-white">{friendProfile.full_name || 'Unknown User'}</h3>
                         <p className="text-sm text-gray-400">
                           Friends since {new Date(friendship.created_at).toLocaleDateString()}
                         </p>
                       </div>
                     </div>
                     <Button
-                      onClick={() => handleStartChat(friend.id)}
+                      onClick={() => handleStartChat(friendProfile.id)}
                       className="gradient-primary"
                       size="sm"
                     >

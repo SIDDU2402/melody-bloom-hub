@@ -15,31 +15,74 @@ export interface Friend {
 
 export const useFriends = () => {
   const { user } = useAuth();
-  
+
   return useQuery({
     queryKey: ['friends', user?.id],
     queryFn: async () => {
       if (!user) return [];
-      
-      console.log('Fetching friends for user:', user.id);
-      
-      const { data, error } = await supabase
+
+      console.log('Fetching accepted friend records for user:', user.id);
+      // Step 1: Get all accepted friend records involving the user
+      const { data: friendRecords, error: recordsError } = await supabase
         .from('friends')
-        .select(`
-          *,
-          requester:profiles!friends_requester_id_fkey(id, full_name, avatar_url),
-          addressee:profiles!friends_addressee_id_fkey(id, full_name, avatar_url)
-        `)
+        .select('*') // Select all columns from 'friends' table
         .or(`requester_id.eq.${user.id},addressee_id.eq.${user.id}`)
         .eq('status', 'accepted');
-      
-      if (error) {
-        console.error('Error fetching friends:', error);
-        throw error;
+
+      if (recordsError) {
+        console.error('Error fetching friend records:', recordsError);
+        throw recordsError;
+      }
+
+      if (!friendRecords || friendRecords.length === 0) {
+        console.log('No accepted friend records found.');
+        return [];
+      }
+
+      console.log('Accepted friend records:', friendRecords);
+
+      // Step 2: Extract all unique profile IDs from these records
+      const profileIds = new Set<string>();
+      friendRecords.forEach(record => {
+        profileIds.add(record.requester_id);
+        profileIds.add(record.addressee_id);
+      });
+
+      if (profileIds.size === 0) {
+        // Should not happen if friendRecords is not empty, but as a safeguard
+        return [];
+      }
+
+      console.log('Fetching profiles for IDs:', Array.from(profileIds));
+      // Step 3: Fetch all relevant profiles in one go
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, full_name, avatar_url, username') // Added username for completeness
+        .in('id', Array.from(profileIds));
+
+      if (profilesError) {
+        console.error('Error fetching profiles:', profilesError);
+        throw profilesError;
       }
       
-      console.log('Friends data:', data);
-      return data || [];
+      console.log('Fetched profiles:', profiles);
+
+      // Step 4: Map profiles to a dictionary for easy lookup
+      const profilesMap = new Map(
+        profiles ? profiles.map(p => [p.id, p]) : []
+      );
+
+      // Step 5: Combine friend records with their respective requester and addressee profiles
+      const enrichedFriends = friendRecords.map(record => {
+        return {
+          ...record,
+          requester: profilesMap.get(record.requester_id) || null, // Fallback to null if profile not found
+          addressee: profilesMap.get(record.addressee_id) || null, // Fallback to null if profile not found
+        };
+      });
+
+      console.log('Enriched friends data:', enrichedFriends);
+      return enrichedFriends;
     },
     enabled: !!user,
   });
