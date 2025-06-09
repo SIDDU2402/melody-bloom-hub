@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Play, Heart, MoreHorizontal, Music } from 'lucide-react';
+import { Play, Heart, MoreHorizontal, Music, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
@@ -47,11 +47,9 @@ const MusicCard: React.FC<MusicCardProps> = ({
 
   const handlePlay = () => {
     if (song) {
-      // Set the playlist for the music player
       setPlaylist(allSongs);
       playSong(song);
       
-      // Track play in database if user is logged in
       if (user) {
         playSongMutation.mutate(id);
       }
@@ -77,70 +75,99 @@ const MusicCard: React.FC<MusicCardProps> = ({
   };
 
   return (
-    <Card className={`group glass music-card-hover p-5 cursor-pointer animate-fade-in relative overflow-hidden ${
-      isCurrentSong ? 'ring-2 ring-purple-400 animate-glow' : ''
+    <Card className={`music-card-enhanced group cursor-pointer relative overflow-hidden ${
+      isCurrentSong ? 'ring-2 ring-purple-400 animate-pulse-glow' : ''
     }`}>
-      {/* Background shimmer effect */}
-      <div className="absolute inset-0 shimmer-bg opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+      {/* Dynamic Background Gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 via-pink-500/10 to-blue-500/10 opacity-0 group-hover:opacity-100 transition-all duration-700"></div>
       
-      <div className="relative z-10">
-        <div className="relative mb-4">
+      {/* Shimmer Effect */}
+      <div className="absolute inset-0 animate-shimmer-intense opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+      
+      {/* Current Song Indicator */}
+      {isCurrentSong && (
+        <div className="absolute top-3 left-3 z-20">
+          <div className="flex items-center space-x-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
+            <Zap className="h-3 w-3 animate-pulse" />
+            <span>NOW PLAYING</span>
+          </div>
+        </div>
+      )}
+      
+      <div className="relative z-10 p-6">
+        <div className="relative mb-6">
           <div 
-            className={`w-full aspect-square rounded-xl mb-4 overflow-hidden ${
+            className={`w-full aspect-square rounded-2xl mb-4 overflow-hidden transition-all duration-500 group-hover:scale-105 group-hover:shadow-2xl ${
               albumArt ? 'bg-cover bg-center' : 'gradient-secondary'
-            } transition-transform duration-300 group-hover:scale-105`}
+            }`}
             style={albumArt ? { backgroundImage: `url(${albumArt})` } : {}}
           >
             {!albumArt && (
-              <div className="w-full h-full flex items-center justify-center">
-                <Music className="h-12 w-12 text-white/70 animate-bounce-gentle" />
+              <div className="w-full h-full flex items-center justify-center relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-purple-500 via-pink-500 to-blue-500 animate-morph opacity-80"></div>
+                <Music className="h-16 w-16 text-white relative z-10 animate-float-gentle drop-shadow-lg" />
               </div>
             )}
             
-            {/* Play button overlay */}
-            <div className={`absolute inset-0 bg-black/60 rounded-xl flex items-center justify-center transition-all duration-300 ${
+            {/* Enhanced Play Button Overlay */}
+            <div className={`absolute inset-0 bg-black/60 rounded-2xl flex items-center justify-center transition-all duration-500 ${
               isCurrentSong && isPlaying 
                 ? 'opacity-100' 
                 : 'opacity-0 group-hover:opacity-100'
             }`}>
               <Button 
                 onClick={handlePlay}
-                className={`w-14 h-14 rounded-full gradient-primary hover:opacity-90 transition-all duration-300 transform hover:scale-110 ${
-                  isCurrentSong ? 'animate-pulse' : ''
+                className={`player-control-primary group/play hover:scale-125 transition-all duration-300 shadow-2xl ${
+                  isCurrentSong ? 'animate-pulse-glow' : ''
                 }`}
               >
-                <Play className="h-6 w-6 ml-0.5" />
+                <Play className="h-8 w-8 ml-1 group-hover/play:scale-110 transition-transform duration-300" />
+                <div className="absolute inset-0 bg-white/20 rounded-full opacity-0 group-hover/play:opacity-100 transition-opacity duration-300"></div>
               </Button>
             </div>
 
-            {/* Now playing indicator */}
+            {/* Animated Sound Waves for Current Song */}
             {isCurrentSong && isPlaying && (
-              <div className="absolute top-3 right-3">
-                <div className="flex space-x-1">
-                  <div className="w-1 h-4 bg-white rounded animate-pulse" style={{ animationDelay: '0s' }}></div>
-                  <div className="w-1 h-4 bg-white rounded animate-pulse" style={{ animationDelay: '0.2s' }}></div>
-                  <div className="w-1 h-4 bg-white rounded animate-pulse" style={{ animationDelay: '0.4s' }}></div>
-                </div>
+              <div className="absolute top-4 right-4 flex space-x-1">
+                {[0, 1, 2].map((index) => (
+                  <div
+                    key={index}
+                    className="w-1 bg-white rounded-full animate-pulse"
+                    style={{
+                      height: `${16 + Math.random() * 8}px`,
+                      animationDelay: `${index * 0.2}s`,
+                      animationDuration: '0.8s'
+                    }}
+                  />
+                ))}
               </div>
             )}
           </div>
         </div>
         
-        <div className="space-y-2">
-          <h3 className="font-semibold text-white truncate text-lg group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-purple-400 group-hover:to-pink-400 transition-all duration-300">
-            {title}
-          </h3>
-          <p className="text-sm text-gray-400 truncate group-hover:text-gray-300 transition-colors">
-            {artist}
-          </p>
+        <div className="space-y-3">
+          <div className="space-y-2">
+            <h3 className="font-bold text-white truncate text-lg group-hover:text-gradient transition-all duration-500 text-shadow">
+              {title}
+            </h3>
+            <p className="text-gray-400 truncate group-hover:text-gray-300 transition-colors duration-300 font-medium">
+              {artist}
+            </p>
+          </div>
           
-          <div className="flex items-center justify-between pt-3">
-            <span className="text-xs text-gray-500 font-medium">{formatDuration(duration)}</span>
-            <div className="flex space-x-2 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-2 group-hover:translate-x-0">
+          <div className="flex items-center justify-between pt-2">
+            <div className="flex items-center space-x-2">
+              <div className="w-2 h-2 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full"></div>
+              <span className="text-xs text-gray-500 font-semibold bg-white/5 px-2 py-1 rounded-lg">
+                {formatDuration(duration)}
+              </span>
+            </div>
+            
+            <div className="flex space-x-2 opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-x-4 group-hover:translate-x-0">
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className={`h-8 w-8 p-0 transition-all duration-300 hover:scale-110 ${
+                className={`player-control transition-all duration-300 hover:scale-125 ${
                   isFavorite 
                     ? 'text-red-400 hover:text-red-300' 
                     : 'text-gray-400 hover:text-red-400'
@@ -148,11 +175,15 @@ const MusicCard: React.FC<MusicCardProps> = ({
                 onClick={handleToggleFavorite}
               >
                 <Heart className={`h-4 w-4 ${isFavorite ? 'fill-current animate-pulse' : ''}`} />
+                {isFavorite && (
+                  <div className="absolute inset-0 bg-red-400/20 rounded-full animate-ping"></div>
+                )}
               </Button>
+              
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="h-8 w-8 p-0 text-gray-400 hover:text-white transition-all duration-300 hover:scale-110"
+                className="player-control text-gray-400 hover:text-white transition-all duration-300 hover:scale-125"
               >
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
@@ -160,6 +191,9 @@ const MusicCard: React.FC<MusicCardProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Bottom Gradient Border */}
+      <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
     </Card>
   );
 };
