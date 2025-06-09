@@ -1,5 +1,6 @@
+
 import React, { useState } from 'react';
-import { Music, User, Upload, Heart, List, Shield, Settings, LogOut } from 'lucide-react';
+import { Music, User, Upload, Heart, List, Shield, Settings, LogOut, MessageCircle, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
@@ -113,6 +114,14 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                         <User className="h-4 w-4 mr-2" />
                         Profile
                       </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/friends')} className="text-white hover:bg-white/10">
+                        <Users className="h-4 w-4 mr-2" />
+                        Friends
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/chat')} className="text-white hover:bg-white/10">
+                        <MessageCircle className="h-4 w-4 mr-2" />
+                        Messages
+                      </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => navigate('/settings')} className="text-white hover:bg-white/10">
                         <Settings className="h-4 w-4 mr-2" />
                         Settings
@@ -165,6 +174,30 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   </Button>
                 </div>
               </div>
+
+              {user && (
+                <div>
+                  <h3 className="text-lg font-semibold text-white mb-3">Social</h3>
+                  <div className="space-y-2">
+                    <Button 
+                      variant="ghost" 
+                      className="w-full justify-start text-gray-300 hover:text-white hover:bg-white/10"
+                      onClick={() => navigate('/friends')}
+                    >
+                      <Users className="h-4 w-4 mr-3" />
+                      Friends
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      className="w-full justify-start text-gray-300 hover:text-white hover:bg-white/10"
+                      onClick={() => navigate('/chat')}
+                    >
+                      <MessageCircle className="h-4 w-4 mr-3" />
+                      Messages
+                    </Button>
+                  </div>
+                </div>
+              )}
 
               {user && isAdmin && (
                 <div>

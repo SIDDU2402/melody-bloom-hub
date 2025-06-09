@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Home, Search, Heart, User, Music } from 'lucide-react';
+import { Home, Search, Heart, User, Music, Users, MessageCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -14,7 +14,8 @@ const MobileNavigation = () => {
     { icon: Home, label: 'Home', path: '/', requiresAuth: false },
     { icon: Search, label: 'Search', path: '/search', requiresAuth: false },
     { icon: Heart, label: 'Favorites', path: '/favorites', requiresAuth: true },
-    { icon: Music, label: 'Playlists', path: '/playlists', requiresAuth: true },
+    { icon: Users, label: 'Friends', path: '/friends', requiresAuth: true },
+    { icon: MessageCircle, label: 'Chat', path: '/chat', requiresAuth: true },
     { icon: User, label: 'Profile', path: '/profile', requiresAuth: true },
   ];
 
@@ -31,7 +32,8 @@ const MobileNavigation = () => {
       <div className="glass border-t border-white/10 backdrop-blur-xl mobile-safe-left mobile-safe-right">
         <div className="flex items-center justify-around py-2 px-2">
           {navItems.map((item) => {
-            const isActive = location.pathname === item.path;
+            const isActive = location.pathname === item.path || 
+              (item.path === '/chat' && location.pathname.startsWith('/chat'));
             return (
               <Button
                 key={item.path}
