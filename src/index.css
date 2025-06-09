@@ -186,7 +186,7 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Music Card Enhancements */
 .music-card-enhanced {
-  @apply glass-card cursor-pointer group relative overflow-hidden;
+  @apply glass-card cursor-pointer relative overflow-hidden;
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
   transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
