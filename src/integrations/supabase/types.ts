@@ -475,6 +475,10 @@ export type Database = {
         Args: { song_uuid: string }
         Returns: undefined
       }
+      is_chat_participant: {
+        Args: { room_uuid: string; user_uuid: string }
+        Returns: boolean
+      }
       make_user_admin: {
         Args: { _email: string }
         Returns: undefined
