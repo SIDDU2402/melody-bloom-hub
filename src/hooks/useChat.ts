@@ -170,7 +170,7 @@ export const useCreateOrGetDMRoom = () => {
   
   return useMutation({
     mutationFn: async (otherUserId: string) => {
-      const { data: rpcResponse, error } = await supabase
+      const { data: roomId, error } = await supabase
         .rpc('get_or_create_dm_room', { other_user_id: otherUserId });
       
       if (error) {
@@ -178,25 +178,10 @@ export const useCreateOrGetDMRoom = () => {
         throw error;
       }
 
-      console.log('RPC get_or_create_dm_room response:', rpcResponse);
+      console.log('RPC get_or_create_dm_room response:', roomId);
 
-      // First, ensure rpcResponse is not null and is an object before trying to access properties
-      if (rpcResponse && typeof rpcResponse === 'object') {
-        // Explicitly type assertion if necessary, or check properties safely
-        const responseObject = rpcResponse as any; // Use 'as any' for simplicity or define a more specific type if known
-
-        if (typeof responseObject.room_id === 'string' && responseObject.room_id.trim() !== '') {
-          return responseObject.room_id;
-        }
-        if (typeof responseObject.id === 'string' && responseObject.id.trim() !== '') { // Common alternative key
-          return responseObject.id;
-        }
-        // If object doesn't have expected keys, or values are invalid, it will fall through.
-      }
-      
-      // If rpcResponse is already a string (the ID itself), a primitive, or an object that didn't match above conditions,
-      // return it. The check in FriendsList.tsx will validate if it's a usable string ID.
-      return rpcResponse; // This could still be null or an unhandled object type if the RPC returns that.
+      // The RPC function returns a UUID directly
+      return roomId;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['chat-rooms'] });
