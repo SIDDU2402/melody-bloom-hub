@@ -59,3 +59,6 @@ VITE_SUPABASE_ANON_KEY=your-anon-key
 ```bash
 npm run dev
 ```
+## 📄 License
+### MIT © SIDDU2402
+
